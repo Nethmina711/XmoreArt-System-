@@ -18,16 +18,21 @@ import {
   Film
 } from "lucide-react";
 
+import { DataStore } from "@/lib/data/dataStore";
+import { PackageItem } from "@/lib/types";
+
 export const WeddingSection: React.FC = () => {
   const { settings } = useSettings();
 
-  const weddingPackages = [
+  const dynamicWeddingPackages = DataStore.getPackages().filter(
+    (p) => p.category === "Wedding" && p.published
+  );
+
+  const defaultWeddingPackages = [
     {
       id: "pre-wedding",
-      type: "PRE_WEDDING",
       name: "Pre-Wedding & Couple Story",
-      subtitle: "Outdoor Romantic Couple Session",
-      price: "Rs. 65,000",
+      priceDisplay: "Rs. 65,000",
       description: "Scenic location couple shoot with concept mood styling and 4K cinematic romance teaser.",
       popular: false,
       features: [
@@ -37,15 +42,12 @@ export const WeddingSection: React.FC = () => {
         "50 Master Retouched High-Resolution Portraits",
         "16x24 Framed Reception Welcome Portrait",
         "All Raw Digital Originals via Cloud Vault"
-      ],
-      link: "/book?type=PRE_WEDDING"
+      ]
     },
     {
       id: "wedding-signature",
-      type: "WEDDING_FULL",
       name: "Royal Signature Wedding Package",
-      subtitle: "Full Day Poruwa / Church + Reception",
-      price: "Rs. 185,000",
+      priceDisplay: "Rs. 185,000",
       description: "Our premier all-inclusive wedding production with master crew, 4K aerial drone, and handcrafted leather album.",
       popular: true,
       features: [
@@ -56,15 +58,12 @@ export const WeddingSection: React.FC = () => {
         "Two 8x16 Parent Mini Albums Included",
         "6-8 Minute Cinematic Highlight Film + Full Ceremony Video",
         "Same-Day 60s Express Social Media Teaser for Wedding Night"
-      ],
-      link: "/book?type=WEDDING_FULL"
+      ]
     },
     {
       id: "homecoming",
-      type: "WEDDING_HOMECOMING",
       name: "Homecoming & Evening Gala",
-      subtitle: "Complete Homecoming Function Coverage",
-      price: "Rs. 120,000",
+      priceDisplay: "Rs. 120,000",
       description: "Elegant coverage of your second day celebration with magazine album and highlight cinematography.",
       popular: false,
       features: [
@@ -74,10 +73,11 @@ export const WeddingSection: React.FC = () => {
         "4-Minute Cinematic Highlight Video",
         "300+ Color-Graded High-Resolution Digital Files",
         "Express 48-Hour Digital Photo Delivery"
-      ],
-      link: "/book?type=WEDDING_HOMECOMING"
+      ]
     }
   ];
+
+  const packagesToDisplay = dynamicWeddingPackages.length > 0 ? dynamicWeddingPackages : defaultWeddingPackages;
 
   const weddingWhatsAppUrl = getWhatsAppLink(
     settings.whatsappNumber || "94716666643",
@@ -111,7 +111,7 @@ export const WeddingSection: React.FC = () => {
 
         {/* 3 Signature Wedding Packages Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
-          {weddingPackages.map((pkg) => (
+          {packagesToDisplay.map((pkg) => (
             <div
               key={pkg.id}
               className={`rounded-3xl p-8 transition-all duration-300 flex flex-col justify-between relative ${
@@ -131,7 +131,7 @@ export const WeddingSection: React.FC = () => {
 
               <div>
                 <span className="text-[10px] uppercase font-bold tracking-widest text-brand-red block mb-1">
-                  {pkg.subtitle}
+                  {(pkg as any).subtitle || "Wedding & Cinematic Shoot"}
                 </span>
 
                 <h3 className="font-heading font-extrabold text-2xl text-white mb-2">
@@ -144,8 +144,8 @@ export const WeddingSection: React.FC = () => {
 
                 {/* Price Display */}
                 <div className="pb-6 mb-6 border-b border-white/10">
-                  <span className="font-heading font-black text-3xl sm:text-4xl text-white">
-                    {pkg.price}
+                  <span className="font-heading font-black text-3xl sm:text-4xl text-white font-mono">
+                    {pkg.priceDisplay || (pkg as any).price}
                   </span>
                   <span className="text-[11px] text-neutral-400 block mt-1">
                     Fixed all-inclusive price in LKR (No hidden charges)

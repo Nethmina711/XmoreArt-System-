@@ -151,13 +151,28 @@ export default function CmsPage() {
     setEditingPackage(null);
     setPackageForm({
       name: "",
-      category: "Branding",
+      category: "Wedding",
       description: "",
-      priceDisplay: "Rs. 35,000",
-      features: "3 Logo Concepts\nBrand Color Palette\nVector Source Files",
-      ctaText: "Choose Package",
+      priceDisplay: "Rs. 185,000",
+      features: "Full Day Coverage (Poruwa + Reception)\n2 Photographers + 2 Cinematographers\n4K Drone Aerial Coverage\n12x24 Flush Mount Leather Album",
+      ctaText: "Reserve Package",
       popular: false,
       published: true,
+    });
+    setIsPackageModalOpen(true);
+  };
+
+  const openEditPackage = (pkg: PackageItem) => {
+    setEditingPackage(pkg);
+    setPackageForm({
+      name: pkg.name,
+      category: pkg.category,
+      description: pkg.description,
+      priceDisplay: pkg.priceDisplay,
+      features: pkg.features.join("\n"),
+      ctaText: pkg.ctaText,
+      popular: !!pkg.popular,
+      published: pkg.published,
     });
     setIsPackageModalOpen(true);
   };
@@ -495,12 +510,22 @@ export default function CmsPage() {
 
                 <div className="pt-4 border-t border-white/5 mt-6 flex items-center justify-between">
                   <span className="text-[10px] text-neutral-500">{pkg.features.length} features listed</span>
-                  <button
-                    onClick={() => handleDeletePackage(pkg.id)}
-                    className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => openEditPackage(pkg)}
+                      className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-neutral-300 hover:text-white"
+                      title="Edit Package"
+                    >
+                      <Edit className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleDeletePackage(pkg.id)}
+                      className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white"
+                      title="Delete Package"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -520,7 +545,7 @@ export default function CmsPage() {
               className="px-4 py-2 rounded-xl bg-brand-red hover:bg-brand-red-dark text-white text-xs font-bold font-heading uppercase tracking-wider flex items-center gap-1.5"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>New Article</span>
+              <span>Add Article</span>
             </button>
           </div>
 
@@ -531,25 +556,71 @@ export default function CmsPage() {
                 className="bg-brand-dark-card border border-white/10 rounded-3xl overflow-hidden shadow-xl flex flex-col justify-between"
               >
                 <div>
-                  <div className="aspect-[16/9] overflow-hidden bg-neutral-900">
-                    <img src={post.coverImage} alt={post.title} className="w-full h-full object-cover" />
-                  </div>
-                  <div className="p-5">
-                    <span className="text-[10px] uppercase font-bold text-brand-red">{post.category}</span>
-                    <h3 className="font-heading font-bold text-sm text-white line-clamp-2 mt-1">
-                      {post.title}
-                    </h3>
+                  <img
+                    src={post.coverImage}
+                    alt={post.title}
+                    className="w-full h-40 object-cover border-b border-white/10"
+                  />
+                  <div className="p-6">
+                    <span className="text-[10px] font-bold uppercase text-brand-red">{post.category}</span>
+                    <h3 className="font-heading font-bold text-base text-white mt-1 line-clamp-2">{post.title}</h3>
+                    <p className="text-xs text-neutral-400 mt-2 line-clamp-2">{post.excerpt}</p>
                   </div>
                 </div>
 
-                <div className="p-5 pt-0 border-t border-white/5 mt-3 flex items-center justify-between">
-                  <span className="text-[10px] text-neutral-400">{post.publishedDate}</span>
+                <div className="p-6 pt-0 flex items-center justify-between border-t border-white/5 mt-4">
+                  <span className="text-[10px] text-neutral-500">{post.readTime}</span>
                   <button
                     onClick={() => handleDeleteBlog(post.id)}
                     className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 5: SERVICES CMS */}
+      {activeTab === "SERVICES" && (
+        <div className="space-y-4 animate-fade-in">
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-neutral-400">
+              Manage 6 core full-stack service verticals displayed across the website
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {services.map((svc) => (
+              <div
+                key={svc.id}
+                className="bg-brand-dark-card border border-white/10 rounded-3xl p-6 flex flex-col justify-between shadow-xl"
+              >
+                <div>
+                  <span className="text-[10px] font-bold uppercase text-brand-red font-mono">
+                    /{svc.slug}
+                  </span>
+                  <h3 className="font-heading font-bold text-xl text-white mt-1">{svc.name}</h3>
+                  <p className="text-xs text-neutral-400 mt-2 line-clamp-3">{svc.shortDescription}</p>
+
+                  <div className="mt-4 pt-4 border-t border-white/5">
+                    <span className="text-[10px] uppercase font-bold text-neutral-400 block">Starting Rate:</span>
+                    <span className="font-heading font-bold text-base text-emerald-400">{svc.startingPrice}</span>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-white/5 mt-6 flex items-center justify-between text-xs">
+                  <span className="text-neutral-500 text-[10px]">{svc.subServices.length} sub-services</span>
+                  <a
+                    href={`/services/${svc.slug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-brand-red hover:underline font-bold"
+                  >
+                    View Page &rarr;
+                  </a>
                 </div>
               </div>
             ))}
@@ -588,10 +659,11 @@ export default function CmsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1">
-                    Client Name
+                    Client Name *
                   </label>
                   <input
                     type="text"
+                    required
                     value={portfolioForm.client}
                     onChange={e => setPortfolioForm({ ...portfolioForm, client: e.target.value })}
                     className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none"
@@ -619,7 +691,7 @@ export default function CmsPage() {
 
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1">
-                  Cover Image URL
+                  Cover Image URL (Unsplash or CDN)
                 </label>
                 <input
                   type="url"
@@ -681,7 +753,9 @@ export default function CmsPage() {
           <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsPackageModalOpen(false)} />
           <div className="w-full max-w-md bg-brand-dark-card border border-white/15 rounded-3xl p-6 sm:p-8 shadow-2xl relative z-10 animate-fade-in">
             <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-6">
-              <h2 className="font-heading font-bold text-xl text-white">Add Pricing Package</h2>
+              <h2 className="font-heading font-bold text-xl text-white">
+                {editingPackage ? "Edit Pricing Package" : "Add Pricing Package"}
+              </h2>
               <button onClick={() => setIsPackageModalOpen(false)} className="text-neutral-400 hover:text-white">
                 <X className="w-5 h-5" />
               </button>
@@ -697,6 +771,7 @@ export default function CmsPage() {
                   required
                   value={packageForm.name}
                   onChange={e => setPackageForm({ ...packageForm, name: e.target.value })}
+                  placeholder="e.g. Royal Signature Wedding Package"
                   className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none"
                 />
               </div>
@@ -711,39 +786,68 @@ export default function CmsPage() {
                     required
                     value={packageForm.priceDisplay}
                     onChange={e => setPackageForm({ ...packageForm, priceDisplay: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none"
+                    placeholder="e.g. Rs. 185,000"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none font-mono"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1">
-                    Category
+                    Category *
                   </label>
                   <select
                     value={packageForm.category}
                     onChange={e => setPackageForm({ ...packageForm, category: e.target.value as any })}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-black/50 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-black/50 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none font-semibold"
                   >
-                    <option value="Branding">Branding</option>
-                    <option value="Social Media">Social Media</option>
-                    <option value="Printing">Printing</option>
-                    <option value="Videography">Videography</option>
-                    <option value="Photography">Photography</option>
-                    <option value="Custom">Custom</option>
+                    <option value="Wedding">💒 Wedding & Shoots</option>
+                    <option value="Branding">🎨 Branding & Identity</option>
+                    <option value="Social Media">📱 Social Media Retainer</option>
+                    <option value="Videography">🎬 Video Commercial</option>
+                    <option value="Photography">📸 Photography</option>
+                    <option value="Printing">🖨️ Printing & Large Format</option>
+                    <option value="Custom">✨ Custom Enterprise</option>
                   </select>
                 </div>
               </div>
 
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1">
-                  Features (One per line)
+                  Short Description
+                </label>
+                <input
+                  type="text"
+                  value={packageForm.description}
+                  onChange={e => setPackageForm({ ...packageForm, description: e.target.value })}
+                  placeholder="e.g. Full Poruwa + Reception with 4K Drone & Album"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1">
+                  Features (One deliverable per line)
                 </label>
                 <textarea
                   rows={4}
                   value={packageForm.features}
                   onChange={e => setPackageForm({ ...packageForm, features: e.target.value })}
+                  placeholder="Full Day Coverage (Poruwa + Reception)&#10;2 Master Photographers + 2 Cinematographers&#10;4K Drone Aerial Coverage&#10;12x24 Flush Mount Leather Album"
                   className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none"
                 />
+              </div>
+
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="checkbox"
+                  id="pkgPopular"
+                  checked={packageForm.popular}
+                  onChange={e => setPackageForm({ ...packageForm, popular: e.target.checked })}
+                  className="w-4 h-4 rounded border-white/10 bg-white/5 text-brand-red focus:ring-0 cursor-pointer"
+                />
+                <label htmlFor="pkgPopular" className="text-xs text-neutral-300 cursor-pointer select-none">
+                  Highlight as &quot;Most Popular Package&quot; badge
+                </label>
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
@@ -756,9 +860,9 @@ export default function CmsPage() {
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-brand-red hover:bg-brand-red-dark text-white font-heading font-bold text-xs uppercase tracking-wider"
+                  className="px-6 py-2.5 rounded-xl bg-brand-red hover:bg-brand-red-dark text-white font-heading font-bold text-xs uppercase tracking-wider shadow-lg shadow-brand-red/30"
                 >
-                  Save Package
+                  {editingPackage ? "Update Package" : "Save Package"}
                 </button>
               </div>
             </form>
