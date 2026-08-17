@@ -138,12 +138,16 @@ export const DataStore = {
   },
   saveService: (service: ServiceItem): void => {
     const list = DataStore.getServices();
-    const index = list.findIndex(s => s.id === service.id);
+    const index = list.findIndex(s => s.id === service.id || s.slug === service.slug);
     if (index >= 0) {
       list[index] = service;
     } else {
       list.push(service);
     }
+    setItem(STORAGE_KEYS.SERVICES, list);
+  },
+  deleteService: (id: string): void => {
+    const list = DataStore.getServices().filter(s => s.id !== id && s.slug !== id);
     setItem(STORAGE_KEYS.SERVICES, list);
   },
 

@@ -33,12 +33,16 @@ import {
   Film,
   Video,
   DollarSign,
-  CheckCircle2
+  CheckCircle2,
+  Printer,
+  Palette,
+  TrendingUp,
+  Shield
 } from "lucide-react";
 
 export default function CmsPage() {
   const { websiteContent, updateWebsiteContent } = useSettings();
-  const [activeTab, setActiveTab] = useState<"HERO" | "PORTFOLIO" | "PACKAGES" | "SHOOTS" | "BLOG" | "SERVICES">("SHOOTS");
+  const [activeTab, setActiveTab] = useState<"HERO" | "PORTFOLIO" | "PACKAGES" | "SHOOTS" | "BLOG" | "SERVICES">("SERVICES");
 
   // Dynamic lists
   const [portfolioProjects, setPortfolioProjects] = useState(DataStore.getPortfolioProjects());
@@ -104,6 +108,22 @@ export default function CmsPage() {
     name: "",
     price: 35000,
     desc: "",
+  });
+
+  // Service Modal (for /services)
+  const [isServiceModalOpen, setIsServiceModalOpen] = useState(false);
+  const [editingService, setEditingService] = useState<ServiceItem | null>(null);
+  const [serviceForm, setServiceForm] = useState({
+    name: "",
+    slug: "",
+    shortDescription: "",
+    fullDescription: "",
+    iconName: "Sparkles",
+    coverImage: "https://images.unsplash.com/photo-1542744094-3a31f272c490?q=80&w=1000&auto=format&fit=crop",
+    startingPrice: "Starting from Rs. 25,000",
+    subServices: "Sub-service 1, Sub-service 2, Sub-service 3",
+    features: "Feature capability 1\nFeature capability 2\nFeature capability 3",
+    published: true,
   });
 
   // Blog Modal
@@ -322,6 +342,80 @@ export default function CmsPage() {
     }
   };
 
+  // Services Handlers
+  const openAddService = () => {
+    setEditingService(null);
+    setServiceForm({
+      name: "",
+      slug: "",
+      shortDescription: "",
+      fullDescription: "",
+      iconName: "Sparkles",
+      coverImage: "https://images.unsplash.com/photo-1542744094-3a31f272c490?q=80&w=1000&auto=format&fit=crop",
+      startingPrice: "Starting from Rs. 25,000",
+      subServices: "Commercial Delivery, Creative Direction, Fast Turnaround",
+      features: "Premium Raw Assets\nLicensed Commercial Rights\nDedicated Creative Specialist",
+      published: true,
+    });
+    setIsServiceModalOpen(true);
+  };
+
+  const openEditService = (svc: ServiceItem) => {
+    setEditingService(svc);
+    setServiceForm({
+      name: svc.name,
+      slug: svc.slug,
+      shortDescription: svc.shortDescription,
+      fullDescription: svc.fullDescription,
+      iconName: svc.iconName,
+      coverImage: svc.coverImage,
+      startingPrice: svc.startingPrice,
+      subServices: svc.subServices.join(", "),
+      features: svc.features.join("\n"),
+      published: svc.published,
+    });
+    setIsServiceModalOpen(true);
+  };
+
+  const handleSaveService = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!serviceForm.name) return;
+
+    const slug = serviceForm.slug || serviceForm.name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    const svcToSave: ServiceItem = {
+      id: editingService ? editingService.id : `srv-${Date.now()}`,
+      slug,
+      name: serviceForm.name,
+      shortDescription: serviceForm.shortDescription,
+      fullDescription: serviceForm.fullDescription || serviceForm.shortDescription,
+      iconName: serviceForm.iconName,
+      coverImage: serviceForm.coverImage,
+      startingPrice: serviceForm.startingPrice,
+      subServices: serviceForm.subServices.split(",").map(s => s.trim()).filter(Boolean),
+      features: serviceForm.features.split("\n").map(s => s.trim()).filter(Boolean),
+      gallery: editingService?.gallery || [serviceForm.coverImage],
+      benefits: editingService?.benefits || ["Dedicated Art Director", "Fast Turnaround", "Satisfaction Guaranteed"],
+      faq: editingService?.faq || [{ question: "What is included?", answer: "All design files, revisions, and production deliverables." }],
+      processSteps: editingService?.processSteps || [
+        { title: "Briefing & Concept", desc: "Understanding client goals and creative direction." },
+        { title: "Production & Refinement", desc: "Crafting deliverables with precision." },
+        { title: "Delivery & Sign-off", desc: "Final file transfer and implementation." }
+      ],
+      published: serviceForm.published,
+    };
+
+    DataStore.saveService(svcToSave);
+    setServices(DataStore.getServices());
+    setIsServiceModalOpen(false);
+  };
+
+  const handleDeleteService = (id: string) => {
+    if (confirm("Are you sure you want to delete this service vertical?")) {
+      DataStore.deleteService(id);
+      setServices(DataStore.getServices());
+    }
+  };
+
   // Blog Handlers
   const openAddBlog = () => {
     setEditingBlog(null);
@@ -384,7 +478,7 @@ export default function CmsPage() {
             Website Content & CMS Suite
           </h1>
           <p className="text-xs text-neutral-400 mt-1">
-            Update homepage copy, wedding shoot pricing, packages, portfolio projects & articles in real-time
+            Update services, packages, wedding pricing, homepage copy, portfolio & blog in real-time
           </p>
         </div>
       </div>
@@ -392,11 +486,11 @@ export default function CmsPage() {
       {/* Tabs */}
       <div className="flex items-center gap-2 border-b border-white/10 pb-3 overflow-x-auto scrollbar-none">
         {[
+          { id: "SERVICES", label: `Services (${services.length})`, icon: Layers },
           { id: "SHOOTS", label: `Wedding & Shoot Pricing (/book)`, icon: Camera },
           { id: "PACKAGES", label: `Public Packages CMS (${packages.length})`, icon: Package },
           { id: "HERO", label: "Homepage Hero", icon: Sparkles },
           { id: "PORTFOLIO", label: `Portfolio CMS (${portfolioProjects.length})`, icon: ImageIcon },
-          { id: "SERVICES", label: `Services (${services.length})`, icon: Layers },
           { id: "BLOG", label: `Blog CMS (${blogPosts.length})`, icon: FileText },
         ].map((tab) => {
           const Icon = tab.icon;
@@ -417,7 +511,101 @@ export default function CmsPage() {
         })}
       </div>
 
-      {/* TAB 1: SHOOT & WEDDING PRICING CMS */}
+      {/* TAB 1: SERVICES CMS */}
+      {activeTab === "SERVICES" && (
+        <div className="space-y-4 animate-fade-in">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <p className="text-xs text-neutral-400">
+              Manage your core service verticals displayed across the homepage, services index, and navigation
+            </p>
+            <button
+              onClick={openAddService}
+              className="px-4 py-2 rounded-xl bg-brand-red hover:bg-brand-red-dark text-white text-xs font-bold font-heading uppercase tracking-wider flex items-center gap-1.5 self-start sm:self-auto shadow-md shadow-brand-red/20 transition-all"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Add New Service</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {services.map((svc) => (
+              <div
+                key={svc.id}
+                className="bg-brand-dark-card border border-white/10 rounded-3xl p-6 flex flex-col justify-between shadow-xl hover:border-white/20 transition-all"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[10px] font-bold uppercase text-brand-red font-mono">
+                      /{svc.slug}
+                    </span>
+                    <span className={`text-[9px] uppercase font-bold px-2 py-0.5 rounded-full ${
+                      svc.published ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : "bg-neutral-500/10 text-neutral-400"
+                    }`}>
+                      {svc.published ? "Published" : "Draft"}
+                    </span>
+                  </div>
+
+                  <h3 className="font-heading font-bold text-xl text-white mt-1">{svc.name}</h3>
+                  <p className="text-xs text-neutral-400 mt-2 line-clamp-3 leading-relaxed">{svc.shortDescription}</p>
+
+                  <div className="mt-4 pt-4 border-t border-white/5">
+                    <span className="text-[10px] uppercase font-bold text-neutral-400 block">Starting Rate:</span>
+                    <span className="font-heading font-bold text-base text-emerald-400">{svc.startingPrice}</span>
+                  </div>
+
+                  <div className="mt-3">
+                    <span className="text-[10px] uppercase font-bold text-neutral-400 block mb-1.5">Deliverables:</span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {svc.subServices.slice(0, 3).map((sub, sIdx) => (
+                        <span key={sIdx} className="px-2 py-0.5 rounded-md bg-white/5 text-[10px] text-neutral-300">
+                          {sub}
+                        </span>
+                      ))}
+                      {svc.subServices.length > 3 && (
+                        <span className="text-[10px] text-neutral-500 self-center">
+                          +{svc.subServices.length - 3} more
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-white/5 mt-6 flex items-center justify-between text-xs">
+                  <a
+                    href={`/services/${svc.slug}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-brand-red hover:underline font-bold"
+                  >
+                    View Page &rarr;
+                  </a>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => openEditService(svc)}
+                      className="px-3 py-1.5 rounded-xl bg-white/5 hover:bg-white/10 text-neutral-200 text-xs font-semibold flex items-center gap-1.5 transition-all border border-white/10"
+                      title="Edit Service"
+                    >
+                      <Edit className="w-3.5 h-3.5 text-brand-red" />
+                      <span>Edit</span>
+                    </button>
+
+                    <button
+                      onClick={() => handleDeleteService(svc.id)}
+                      className="p-2 rounded-xl bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white transition-all"
+                      title="Delete Service"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* TAB 2: SHOOT & WEDDING PRICING CMS */}
       {activeTab === "SHOOTS" && (
         <div className="space-y-8 animate-fade-in">
           
@@ -546,7 +734,7 @@ export default function CmsPage() {
         </div>
       )}
 
-      {/* TAB 2: PACKAGES CMS */}
+      {/* TAB 3: PACKAGES CMS */}
       {activeTab === "PACKAGES" && (
         <div className="space-y-4 animate-fade-in">
           <div className="flex items-center justify-between">
@@ -602,7 +790,7 @@ export default function CmsPage() {
         </div>
       )}
 
-      {/* TAB 3: HERO CMS */}
+      {/* TAB 4: HERO CMS */}
       {activeTab === "HERO" && (
         <div className="bg-brand-dark-card border border-white/10 rounded-3xl p-6 sm:p-8 max-w-2xl shadow-xl animate-fade-in">
           <form onSubmit={handleSaveHero} className="space-y-5">
@@ -715,7 +903,7 @@ export default function CmsPage() {
         </div>
       )}
 
-      {/* TAB 4: PORTFOLIO CMS */}
+      {/* TAB 5: PORTFOLIO CMS */}
       {activeTab === "PORTFOLIO" && (
         <div className="space-y-4 animate-fade-in">
           <div className="flex items-center justify-between">
@@ -790,51 +978,6 @@ export default function CmsPage() {
         </div>
       )}
 
-      {/* TAB 5: SERVICES CMS */}
-      {activeTab === "SERVICES" && (
-        <div className="space-y-4 animate-fade-in">
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-neutral-400">
-              Manage 6 core full-stack service verticals displayed across the website
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {services.map((svc) => (
-              <div
-                key={svc.id}
-                className="bg-brand-dark-card border border-white/10 rounded-3xl p-6 flex flex-col justify-between shadow-xl"
-              >
-                <div>
-                  <span className="text-[10px] font-bold uppercase text-brand-red font-mono">
-                    /{svc.slug}
-                  </span>
-                  <h3 className="font-heading font-bold text-xl text-white mt-1">{svc.name}</h3>
-                  <p className="text-xs text-neutral-400 mt-2 line-clamp-3">{svc.shortDescription}</p>
-
-                  <div className="mt-4 pt-4 border-t border-white/5">
-                    <span className="text-[10px] uppercase font-bold text-neutral-400 block">Starting Rate:</span>
-                    <span className="font-heading font-bold text-base text-emerald-400">{svc.startingPrice}</span>
-                  </div>
-                </div>
-
-                <div className="pt-4 border-t border-white/5 mt-6 flex items-center justify-between text-xs">
-                  <span className="text-neutral-500 text-[10px]">{svc.subServices.length} sub-services</span>
-                  <a
-                    href={`/services/${svc.slug}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-brand-red hover:underline font-bold"
-                  >
-                    View Page &rarr;
-                  </a>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
       {/* TAB 6: BLOG CMS */}
       {activeTab === "BLOG" && (
         <div className="space-y-4 animate-fade-in">
@@ -881,6 +1024,163 @@ export default function CmsPage() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      )}
+
+      {/* SERVICE MODAL */}
+      {isServiceModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsServiceModalOpen(false)} />
+          <div className="w-full max-w-lg bg-brand-dark-card border border-white/15 rounded-3xl p-6 sm:p-8 shadow-2xl relative z-10 animate-fade-in max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-6">
+              <h2 className="font-heading font-bold text-xl text-white">
+                {editingService ? "Edit Service Vertical" : "Add New Service Vertical"}
+              </h2>
+              <button onClick={() => setIsServiceModalOpen(false)} className="text-neutral-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveService} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1">
+                  Service Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={serviceForm.name}
+                  onChange={e => setServiceForm({ ...serviceForm, name: e.target.value })}
+                  placeholder="e.g. Commercial Photography & Aerial Cinema"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1">
+                    URL Slug (e.g. photography)
+                  </label>
+                  <input
+                    type="text"
+                    value={serviceForm.slug}
+                    onChange={e => setServiceForm({ ...serviceForm, slug: e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, "-") })}
+                    placeholder="e.g. aerial-cinema"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1">
+                    Starting Rate Display *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={serviceForm.startingPrice}
+                    onChange={e => setServiceForm({ ...serviceForm, startingPrice: e.target.value })}
+                    placeholder="e.g. Starting from Rs. 45,000"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none font-mono"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1">
+                  Cover Image URL (Unsplash or CDN)
+                </label>
+                <input
+                  type="url"
+                  required
+                  value={serviceForm.coverImage}
+                  onChange={e => setServiceForm({ ...serviceForm, coverImage: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1">
+                  Short Summary Description *
+                </label>
+                <textarea
+                  rows={2}
+                  required
+                  value={serviceForm.shortDescription}
+                  onChange={e => setServiceForm({ ...serviceForm, shortDescription: e.target.value })}
+                  placeholder="Concise overview shown in cards and headers..."
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1">
+                  Full Page Detailed Description
+                </label>
+                <textarea
+                  rows={3}
+                  value={serviceForm.fullDescription}
+                  onChange={e => setServiceForm({ ...serviceForm, fullDescription: e.target.value })}
+                  placeholder="In-depth explanation shown on the dedicated service page..."
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1">
+                  Deliverables & Sub-Services (Comma-separated)
+                </label>
+                <input
+                  type="text"
+                  value={serviceForm.subServices}
+                  onChange={e => setServiceForm({ ...serviceForm, subServices: e.target.value })}
+                  placeholder="Brand Architecture, Color Palette, Packaging Box"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1">
+                  Core Features & Strengths (One per line)
+                </label>
+                <textarea
+                  rows={3}
+                  value={serviceForm.features}
+                  onChange={e => setServiceForm({ ...serviceForm, features: e.target.value })}
+                  placeholder="4K Cinema Grade Sensors&#10;Color Graded Master Files&#10;Express 48-Hour Rush Delivery Available"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none"
+                />
+              </div>
+
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="checkbox"
+                  id="svcPublished"
+                  checked={serviceForm.published}
+                  onChange={e => setServiceForm({ ...serviceForm, published: e.target.checked })}
+                  className="w-4 h-4 rounded border-white/10 bg-white/5 text-brand-red focus:ring-0 cursor-pointer"
+                />
+                <label htmlFor="svcPublished" className="text-xs text-neutral-300 cursor-pointer select-none">
+                  Published live on public website & service menus
+                </label>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
+                <button
+                  type="button"
+                  onClick={() => setIsServiceModalOpen(false)}
+                  className="px-4 py-2.5 rounded-xl text-neutral-400 hover:text-white text-xs font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded-xl bg-brand-red hover:bg-brand-red-dark text-white font-heading font-bold text-xs uppercase tracking-wider shadow-lg shadow-brand-red/30"
+                >
+                  {editingService ? "Update Service" : "Save Service"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
