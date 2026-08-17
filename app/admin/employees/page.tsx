@@ -206,9 +206,9 @@ export default function EmployeesPage() {
                   <span>{emp.phone}</span>
                 </p>
                 <p className="flex items-center gap-2">
-                  <KeyRound className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                  <span className="text-[11px] font-mono text-neutral-300">
-                    Password: <strong className="text-white">{emp.password || "admin1234"}</strong>
+                  <KeyRound className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
+                  <span className="text-[11px] text-neutral-400">
+                    Access Password: <span className="font-mono text-neutral-400">••••••••</span>
                   </span>
                 </p>
               </div>
