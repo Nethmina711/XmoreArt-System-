@@ -331,7 +331,7 @@ export interface ServiceItem {
 export interface PackageItem {
   id: string;
   name: string;
-  category: 'Branding' | 'Social Media' | 'Printing' | 'Photography' | 'Videography' | 'Custom';
+  category: 'Wedding' | 'Branding' | 'Social Media' | 'Printing' | 'Photography' | 'Videography' | 'Custom';
   description: string;
   features: string[];
   price?: number;
