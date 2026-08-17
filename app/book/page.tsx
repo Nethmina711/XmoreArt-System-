@@ -7,7 +7,8 @@ import { Footer } from "@/components/public/Footer";
 import { WhatsAppFloatingButton } from "@/components/public/WhatsAppFloatingButton";
 import { useSettings } from "@/lib/context/SettingsContext";
 import { DataStore } from "@/lib/data/dataStore";
-import { ShootBooking, ShootType, AuspiciousTimes } from "@/lib/types";
+import { ShootBooking, ShootType, AuspiciousTimes, ShootPackageOption, ShootAddonOption } from "@/lib/types";
+import { initialShootPackages, initialShootAddons } from "@/lib/data/seedData";
 import { generateBookingNumber, formatCurrency, getWhatsAppLink } from "@/lib/utils";
 import {
   Calendar,
@@ -32,84 +33,26 @@ import {
   DollarSign
 } from "lucide-react";
 
-interface ShootOption {
-  type: ShootType;
-  title: string;
-  subtitle: string;
-  icon: any;
-  basePrice: number;
-  popular?: boolean;
-}
-
-const shootOptions: ShootOption[] = [
-  {
-    type: "WEDDING_FULL",
-    title: "Full Day Wedding Day",
-    subtitle: "Complete Poruwa / Church + Reception photography & cinematic film",
-    icon: Heart,
-    basePrice: 185000,
-    popular: true,
-  },
-  {
-    type: "PRE_WEDDING",
-    title: "Pre-Wedding / Engagement",
-    subtitle: "Outdoor romantic couple shoot with styling & mood concepts",
-    icon: Camera,
-    basePrice: 65000,
-    popular: true,
-  },
-  {
-    type: "WEDDING_HOMECOMING",
-    title: "Homecoming Function",
-    subtitle: "Complete homecoming photography & video highlights",
-    icon: Film,
-    basePrice: 120000,
-  },
-  {
-    type: "MODEL_PORTFOLIO",
-    title: "Model & Fashion Portfolio",
-    subtitle: "High-fashion lookbook, runway & personal branding shoots",
-    icon: Sparkles,
-    basePrice: 45000,
-  },
-  {
-    type: "COMMERCIAL_VIDEO",
-    title: "Commercial & Brand Ad Video",
-    subtitle: "Product, hotel & corporate promotional cinematography",
-    icon: Video,
-    basePrice: 95000,
-  },
-  {
-    type: "EVENT_COVERAGE",
-    title: "Birthday & Event Coverage",
-    subtitle: "Anniversaries, get-togethers & private parties",
-    icon: Layers,
-    basePrice: 55000,
-  },
-  {
-    type: "STUDIO_PORTRAIT",
-    title: "In-Studio Portrait Session",
-    subtitle: "Family, graduation, executive & newborn portraiture",
-    icon: Camera,
-    basePrice: 25000,
-  },
-];
-
-const availableAddons = [
-  { id: "drone", name: "4K Drone Aerial Cinematography", price: 35000, desc: "Licensed aerial operator for cinematic overhead angles" },
-  { id: "album_luxury", name: "12x24 Flush Mount Leather Album", price: 45000, desc: "Handcrafted wooden box & seamless panoramic pages" },
-  { id: "same_day_teaser", name: "Same-Day 60s Social Media Teaser", price: 25000, desc: "Delivered on wedding night for instant Instagram/TikTok" },
-  { id: "led_wall", name: "LED Wall 4K Pre-shoot Loop Video", price: 18000, desc: "Color-graded loop prepared for reception backdrop" },
-  { id: "thank_you_cards", name: "Instant Thank-You Cards (100 pcs)", price: 15000, desc: "Printed during event with wedding day photo" },
-  { id: "live_stream", name: "Multi-Cam Live Streaming (1080p)", price: 40000, desc: "Private YouTube / Facebook stream for overseas family" },
-  { id: "second_shooter", name: "Additional Master Photographer", price: 30000, desc: "Extra candid photographer for candid guest moments" },
-];
-
 export default function BookShootPage() {
   const { settings } = useSettings();
   const [step, setStep] = useState(1);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [createdBooking, setCreatedBooking] = useState<ShootBooking | null>(null);
+
+  // Dynamic Shoot Options & Addons from CMS
+  const [shootOptions, setShootOptions] = useState<ShootPackageOption[]>(initialShootPackages);
+  const [availableAddons, setAvailableAddons] = useState<ShootAddonOption[]>(initialShootAddons);
+
+  useEffect(() => {
+    try {
+      const pkgs = DataStore.getShootPackages();
+      if (pkgs && pkgs.length > 0) setShootOptions(pkgs);
+      const addons = DataStore.getShootAddons();
+      if (addons && addons.length > 0) setAvailableAddons(addons);
+    } catch {
+      // Fallback to defaults
+    }
+  }, []);
 
   // Form State
   const [selectedType, setSelectedType] = useState<ShootType>("WEDDING_FULL");
@@ -138,10 +81,10 @@ export default function BookShootPage() {
   // Min Date is tomorrow
   const minDate = new Date(Date.now() + 86400000).toISOString().split("T")[0];
 
-  const currentOption = shootOptions.find(o => o.type === selectedType) || shootOptions[0];
+  const currentOption = shootOptions.find(o => o.type === selectedType) || shootOptions[0] || initialShootPackages[0];
   const selectedAddonObjects = availableAddons.filter(a => selectedAddonIds.includes(a.id));
   const addonsTotal = selectedAddonObjects.reduce((acc, curr) => acc + curr.price, 0);
-  const totalAmount = currentOption.basePrice + addonsTotal;
+  const totalAmount = (currentOption?.basePrice || 0) + addonsTotal;
   const advanceRequired = Math.round(totalAmount * 0.25); // 25% booking advance
 
   const toggleAddon = (id: string) => {
@@ -307,7 +250,19 @@ Please confirm date availability and advance payment instructions!`
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {shootOptions.map((opt) => {
-                        const Icon = opt.icon;
+                        const getIconForType = (t: ShootType) => {
+                          switch (t) {
+                            case "WEDDING_FULL": return Heart;
+                            case "PRE_WEDDING": return Camera;
+                            case "WEDDING_HOMECOMING": return Film;
+                            case "MODEL_PORTFOLIO": return Sparkles;
+                            case "COMMERCIAL_VIDEO": return Video;
+                            case "EVENT_COVERAGE": return Layers;
+                            case "STUDIO_PORTRAIT": return Camera;
+                            default: return Camera;
+                          }
+                        };
+                        const Icon = getIconForType(opt.type);
                         const isSelected = selectedType === opt.type;
 
                         return (

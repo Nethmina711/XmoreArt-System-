@@ -1,9 +1,18 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { DataStore } from "@/lib/data/dataStore";
 import { useSettings } from "@/lib/context/SettingsContext";
-import { PortfolioProject, PackageItem, BlogPost, ServiceItem } from "@/lib/types";
+import { 
+  PortfolioProject, 
+  PackageItem, 
+  BlogPost, 
+  ServiceItem, 
+  ShootPackageOption, 
+  ShootAddonOption,
+  ShootType
+} from "@/lib/types";
+import { formatCurrency } from "@/lib/utils";
 import { 
   Globe, 
   Sparkles, 
@@ -18,18 +27,26 @@ import {
   ShieldCheck, 
   Image as ImageIcon, 
   Eye, 
-  Save 
+  Save,
+  Camera,
+  Heart,
+  Film,
+  Video,
+  DollarSign,
+  CheckCircle2
 } from "lucide-react";
 
 export default function CmsPage() {
   const { websiteContent, updateWebsiteContent } = useSettings();
-  const [activeTab, setActiveTab] = useState<"HERO" | "PORTFOLIO" | "PACKAGES" | "BLOG" | "SERVICES">("HERO");
+  const [activeTab, setActiveTab] = useState<"HERO" | "PORTFOLIO" | "PACKAGES" | "SHOOTS" | "BLOG" | "SERVICES">("SHOOTS");
 
   // Dynamic lists
   const [portfolioProjects, setPortfolioProjects] = useState(DataStore.getPortfolioProjects());
   const [packages, setPackages] = useState(DataStore.getPackages());
   const [blogPosts, setBlogPosts] = useState(DataStore.getBlogPosts());
   const [services, setServices] = useState(DataStore.getServices());
+  const [shootPackages, setShootPackages] = useState<ShootPackageOption[]>(DataStore.getShootPackages());
+  const [shootAddons, setShootAddons] = useState<ShootAddonOption[]>(DataStore.getShootAddons());
 
   // Hero Form
   const [heroForm, setHeroForm] = useState(websiteContent.hero);
@@ -53,18 +70,40 @@ export default function CmsPage() {
     published: true,
   });
 
-  // Package Modal
+  // Package Modal (for /packages)
   const [isPackageModalOpen, setIsPackageModalOpen] = useState(false);
   const [editingPackage, setEditingPackage] = useState<PackageItem | null>(null);
   const [packageForm, setPackageForm] = useState({
     name: "",
-    category: "Branding" as PackageItem["category"],
+    category: "Wedding" as PackageItem["category"],
     description: "",
-    priceDisplay: "Rs. 35,000",
-    features: "Feature 1\nFeature 2\nFeature 3",
-    ctaText: "Choose Package",
+    priceDisplay: "Rs. 185,000",
+    features: "Full Day Coverage (Poruwa + Reception)\n2 Photographers + 2 Cinematographers\n4K Drone Aerial Coverage\n12x24 Flush Mount Leather Album",
+    ctaText: "Reserve Package",
     popular: false,
     published: true,
+  });
+
+  // Shoot Package Modal (for /book wizard)
+  const [isShootModalOpen, setIsShootModalOpen] = useState(false);
+  const [editingShootPkg, setEditingShootPkg] = useState<ShootPackageOption | null>(null);
+  const [shootPkgForm, setShootPkgForm] = useState({
+    id: "",
+    type: "WEDDING_FULL" as ShootType,
+    title: "",
+    subtitle: "",
+    basePrice: 185000,
+    popular: false,
+  });
+
+  // Shoot Addon Modal (for /book wizard)
+  const [isAddonModalOpen, setIsAddonModalOpen] = useState(false);
+  const [editingAddon, setEditingAddon] = useState<ShootAddonOption | null>(null);
+  const [addonForm, setAddonForm] = useState({
+    id: "",
+    name: "",
+    price: 35000,
+    desc: "",
   });
 
   // Blog Modal
@@ -205,6 +244,84 @@ export default function CmsPage() {
     }
   };
 
+  // Shoot Packages (/book wizard) Handlers
+  const openEditShootPkg = (pkg: ShootPackageOption) => {
+    setEditingShootPkg(pkg);
+    setShootPkgForm({
+      id: pkg.id,
+      type: pkg.type,
+      title: pkg.title,
+      subtitle: pkg.subtitle,
+      basePrice: pkg.basePrice,
+      popular: !!pkg.popular,
+    });
+    setIsShootModalOpen(true);
+  };
+
+  const handleSaveShootPkg = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!shootPkgForm.title) return;
+
+    const pkgToSave: ShootPackageOption = {
+      id: editingShootPkg ? editingShootPkg.id : `shoot-${Date.now()}`,
+      type: shootPkgForm.type,
+      title: shootPkgForm.title,
+      subtitle: shootPkgForm.subtitle,
+      basePrice: Number(shootPkgForm.basePrice) || 0,
+      popular: shootPkgForm.popular,
+    };
+
+    DataStore.saveShootPackage(pkgToSave);
+    setShootPackages(DataStore.getShootPackages());
+    setIsShootModalOpen(false);
+  };
+
+  // Shoot Addons Handlers
+  const openAddAddon = () => {
+    setEditingAddon(null);
+    setAddonForm({
+      id: `addon-${Date.now()}`,
+      name: "",
+      price: 25000,
+      desc: "",
+    });
+    setIsAddonModalOpen(true);
+  };
+
+  const openEditAddon = (addon: ShootAddonOption) => {
+    setEditingAddon(addon);
+    setAddonForm({
+      id: addon.id,
+      name: addon.name,
+      price: addon.price,
+      desc: addon.desc,
+    });
+    setIsAddonModalOpen(true);
+  };
+
+  const handleSaveAddon = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!addonForm.name) return;
+
+    const addonToSave: ShootAddonOption = {
+      id: editingAddon ? editingAddon.id : (addonForm.id || `addon-${Date.now()}`),
+      name: addonForm.name,
+      price: Number(addonForm.price) || 0,
+      desc: addonForm.desc,
+    };
+
+    DataStore.saveShootAddon(addonToSave);
+    setShootAddons(DataStore.getShootAddons());
+    setIsAddonModalOpen(false);
+  };
+
+  const handleDeleteAddon = (id: string) => {
+    if (confirm("Delete this add-on option?")) {
+      DataStore.deleteShootAddon(id);
+      setShootAddons(DataStore.getShootAddons());
+    }
+  };
+
   // Blog Handlers
   const openAddBlog = () => {
     setEditingBlog(null);
@@ -258,7 +375,7 @@ export default function CmsPage() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in text-white selection:bg-brand-red selection:text-white">
       
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -267,7 +384,7 @@ export default function CmsPage() {
             Website Content & CMS Suite
           </h1>
           <p className="text-xs text-neutral-400 mt-1">
-            Update homepage copy, hero banners, portfolio projects, packages & articles without touching code
+            Update homepage copy, wedding shoot pricing, packages, portfolio projects & articles in real-time
           </p>
         </div>
       </div>
@@ -275,9 +392,11 @@ export default function CmsPage() {
       {/* Tabs */}
       <div className="flex items-center gap-2 border-b border-white/10 pb-3 overflow-x-auto scrollbar-none">
         {[
+          { id: "SHOOTS", label: `Wedding & Shoot Pricing (/book)`, icon: Camera },
+          { id: "PACKAGES", label: `Public Packages CMS (${packages.length})`, icon: Package },
           { id: "HERO", label: "Homepage Hero", icon: Sparkles },
           { id: "PORTFOLIO", label: `Portfolio CMS (${portfolioProjects.length})`, icon: ImageIcon },
-          { id: "PACKAGES", label: `Packages CMS (${packages.length})`, icon: Package },
+          { id: "SERVICES", label: `Services (${services.length})`, icon: Layers },
           { id: "BLOG", label: `Blog CMS (${blogPosts.length})`, icon: FileText },
         ].map((tab) => {
           const Icon = tab.icon;
@@ -285,7 +404,7 @@ export default function CmsPage() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as any)}
-              className={`px-4 py-2 rounded-xl text-xs font-heading font-semibold uppercase tracking-wider flex items-center gap-2 transition-all ${
+              className={`px-4 py-2 rounded-xl text-xs font-heading font-semibold uppercase tracking-wider flex items-center gap-2 transition-all shrink-0 ${
                 activeTab === tab.id
                   ? "bg-brand-red text-white shadow-lg shadow-brand-red/25"
                   : "bg-white/5 text-neutral-400 hover:text-white hover:bg-white/10"
@@ -298,191 +417,141 @@ export default function CmsPage() {
         })}
       </div>
 
-      {/* TAB 1: HOMEPAGE HERO CMS */}
-      {activeTab === "HERO" && (
-        <div className="bg-brand-dark-card border border-white/10 rounded-3xl p-6 sm:p-8 max-w-3xl animate-fade-in">
-          <form onSubmit={handleSaveHero} className="space-y-4">
-            <h2 className="font-heading font-bold text-lg text-white mb-4">
-              Homepage Hero Section Configuration
-            </h2>
-
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1">
-                Badge Headline
-              </label>
-              <input
-                type="text"
-                value={heroForm.badge}
-                onChange={e => setHeroForm({ ...heroForm, badge: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      {/* TAB 1: SHOOT & WEDDING PRICING CMS */}
+      {activeTab === "SHOOTS" && (
+        <div className="space-y-8 animate-fade-in">
+          
+          {/* Shoot Packages Section */}
+          <div className="bg-brand-dark-card border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/10 mb-6">
               <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1">
-                  Title Line 1
-                </label>
-                <input
-                  type="text"
-                  value={heroForm.titleLine1}
-                  onChange={e => setHeroForm({ ...heroForm, titleLine1: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1">
-                  Title Line 2
-                </label>
-                <input
-                  type="text"
-                  value={heroForm.titleLine2}
-                  onChange={e => setHeroForm({ ...heroForm, titleLine2: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1">
-                  Highlighted Word (Red)
-                </label>
-                <input
-                  type="text"
-                  value={heroForm.highlightWord}
-                  onChange={e => setHeroForm({ ...heroForm, highlightWord: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-brand-red font-bold text-xs focus:border-brand-red focus:outline-none"
-                />
+                <h2 className="font-heading font-bold text-lg text-white uppercase tracking-wider flex items-center gap-2">
+                  <Camera className="w-4 h-4 text-brand-red" />
+                  <span>Interactive Booking Wizard Packages (`/book`)</span>
+                </h2>
+                <p className="text-xs text-neutral-400 mt-1">
+                  Edit the base pricing and descriptions shown to clients on the Book Your Wedding & Shoot page
+                </p>
               </div>
             </div>
 
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1">
-                Subtitle Description
-              </label>
-              <textarea
-                rows={3}
-                value={heroForm.subtitle}
-                onChange={e => setHeroForm({ ...heroForm, subtitle: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1">
-                Background Image URL
-              </label>
-              <input
-                type="url"
-                value={heroForm.bgImageUrl}
-                onChange={e => setHeroForm({ ...heroForm, bgImageUrl: e.target.value })}
-                className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none"
-              />
-            </div>
-
-            <div className="pt-4 flex items-center justify-between">
-              {heroSaved ? (
-                <span className="text-xs text-emerald-400 font-bold flex items-center gap-1">
-                  <Check className="w-4 h-4" /> Live Website Updated!
-                </span>
-              ) : <div />}
-
-              <button
-                type="submit"
-                className="px-6 py-2.5 rounded-xl bg-brand-red hover:bg-brand-red-dark text-white font-heading font-bold text-xs uppercase tracking-wider shadow-lg shadow-brand-red/25 flex items-center gap-2"
-              >
-                <Save className="w-4 h-4" />
-                <span>Save Hero Changes</span>
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* TAB 2: PORTFOLIO CMS */}
-      {activeTab === "PORTFOLIO" && (
-        <div className="space-y-4 animate-fade-in">
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-neutral-400">
-              Manage client projects, case studies, high-resolution galleries and tags
-            </p>
-            <button
-              onClick={openAddPortfolio}
-              className="px-4 py-2 rounded-xl bg-brand-red hover:bg-brand-red-dark text-white text-xs font-bold font-heading uppercase tracking-wider flex items-center gap-1.5"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Add Project</span>
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {portfolioProjects.map((p) => (
-              <div
-                key={p.id}
-                className="bg-brand-dark-card border border-white/10 rounded-3xl overflow-hidden shadow-xl flex flex-col justify-between"
-              >
-                <div>
-                  <div className="aspect-[16/10] overflow-hidden bg-neutral-900 relative">
-                    <img src={p.coverImage} alt={p.title} className="w-full h-full object-cover" />
-                    <span className="absolute top-3 left-3 px-3 py-1 rounded-full bg-brand-black/80 backdrop-blur-md text-[10px] uppercase font-bold text-white">
-                      {p.category}
-                    </span>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {shootPackages.map((pkg) => (
+                <div
+                  key={pkg.id}
+                  className="p-5 rounded-2xl bg-white/5 border border-white/10 flex flex-col justify-between hover:border-white/20 transition-all"
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[9px] uppercase font-mono px-2 py-0.5 rounded-md bg-white/10 text-neutral-300">
+                        {pkg.type}
+                      </span>
+                      {pkg.popular && (
+                        <span className="text-[9px] uppercase font-bold px-2 py-0.5 rounded-full bg-brand-red text-white">
+                          Popular
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="font-heading font-bold text-base text-white">{pkg.title}</h3>
+                    <p className="text-xs text-neutral-400 mt-1 line-clamp-2 leading-relaxed">{pkg.subtitle}</p>
+                    
+                    <div className="mt-4 pt-3 border-t border-white/10">
+                      <span className="text-[10px] text-neutral-400 uppercase font-semibold block">Base Rate:</span>
+                      <span className="font-heading font-black text-xl text-emerald-400 font-mono">
+                        {formatCurrency(pkg.basePrice)}
+                      </span>
+                    </div>
                   </div>
-                  <div className="p-5">
-                    <p className="text-[10px] text-neutral-500 uppercase font-semibold">{p.client}</p>
-                    <h3 className="font-heading font-bold text-sm text-white line-clamp-1 mt-0.5">
-                      {p.title}
-                    </h3>
-                    <p className="text-xs text-neutral-400 mt-2 line-clamp-2">{p.description}</p>
-                  </div>
-                </div>
 
-                <div className="p-5 pt-0 border-t border-white/5 mt-3 flex items-center justify-between">
-                  <span className="text-[10px] text-emerald-400 font-bold uppercase">Published</span>
-                  <div className="flex items-center gap-2">
+                  <div className="pt-4 border-t border-white/5 mt-4 flex items-center justify-end">
                     <button
-                      onClick={() => {
-                        setEditingProject(p);
-                        setPortfolioForm({
-                          title: p.title,
-                          slug: p.slug,
-                          category: p.category,
-                          client: p.client,
-                          coverImage: p.coverImage,
-                          description: p.description,
-                          challenge: p.challenge || "",
-                          solution: p.solution || "",
-                          deliverables: p.deliverables.join(", "),
-                          tags: p.tags.join(", "),
-                          date: p.date,
-                          published: p.published,
-                        });
-                        setIsPortfolioModalOpen(true);
-                      }}
-                      className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-neutral-300"
+                      type="button"
+                      onClick={() => openEditShootPkg(pkg)}
+                      className="px-3 py-1.5 rounded-xl bg-brand-red hover:bg-brand-red-dark text-white text-xs font-bold font-heading uppercase tracking-wider flex items-center gap-1.5 transition-all shadow-md shadow-brand-red/20"
                     >
                       <Edit className="w-3.5 h-3.5" />
+                      <span>Edit Price & Info</span>
                     </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Add-on Deliverables & Upgrades Section */}
+          <div className="bg-brand-dark-card border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-white/10 mb-6">
+              <div>
+                <h2 className="font-heading font-bold text-lg text-white uppercase tracking-wider flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-brand-red" />
+                  <span>Customizable Shoot Add-ons & Gear Upgrades</span>
+                </h2>
+                <p className="text-xs text-neutral-400 mt-1">
+                  Manage optional upgrades selectable in Step 4 of the booking wizard (Drone, Luxury Albums, Teasers, etc.)
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={openAddAddon}
+                className="px-4 py-2 rounded-xl bg-brand-red hover:bg-brand-red-dark text-white text-xs font-bold font-heading uppercase tracking-wider flex items-center gap-1.5 self-start sm:self-auto shadow-md shadow-brand-red/20"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add New Add-on</span>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+              {shootAddons.map((addon) => (
+                <div
+                  key={addon.id}
+                  className="p-5 rounded-2xl bg-white/5 border border-white/10 flex flex-col justify-between hover:border-white/20 transition-all"
+                >
+                  <div>
+                    <h3 className="font-heading font-bold text-sm text-white">{addon.name}</h3>
+                    <p className="text-xs text-neutral-400 mt-1 line-clamp-2">{addon.desc}</p>
+                    
+                    <div className="mt-3 pt-3 border-t border-white/10">
+                      <span className="text-[10px] text-neutral-400 uppercase font-semibold block">Add-on Fee:</span>
+                      <span className="font-heading font-bold text-lg text-emerald-400 font-mono">
+                        +{formatCurrency(addon.price)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="pt-4 border-t border-white/5 mt-4 flex items-center justify-between">
                     <button
-                      onClick={() => handleDeletePortfolio(p.id)}
+                      type="button"
+                      onClick={() => openEditAddon(addon)}
+                      className="text-xs text-brand-red hover:underline font-bold flex items-center gap-1"
+                    >
+                      <Edit className="w-3.5 h-3.5" />
+                      <span>Edit Price</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteAddon(addon.id)}
                       className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white"
+                      title="Delete Addon"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
+
         </div>
       )}
 
-      {/* TAB 3: PACKAGES CMS */}
+      {/* TAB 2: PACKAGES CMS */}
       {activeTab === "PACKAGES" && (
         <div className="space-y-4 animate-fade-in">
           <div className="flex items-center justify-between">
             <p className="text-xs text-neutral-400">
-              Manage tiered pricing packages displayed on the public packages page
+              Manage tiered pricing packages displayed on the public packages page and wedding section
             </p>
             <button
               onClick={openAddPackage}
@@ -533,49 +602,187 @@ export default function CmsPage() {
         </div>
       )}
 
-      {/* TAB 4: BLOG CMS */}
-      {activeTab === "BLOG" && (
+      {/* TAB 3: HERO CMS */}
+      {activeTab === "HERO" && (
+        <div className="bg-brand-dark-card border border-white/10 rounded-3xl p-6 sm:p-8 max-w-2xl shadow-xl animate-fade-in">
+          <form onSubmit={handleSaveHero} className="space-y-5">
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1.5">
+                Top Badge / Pill Text
+              </label>
+              <input
+                type="text"
+                value={heroForm.badge}
+                onChange={e => setHeroForm({ ...heroForm, badge: e.target.value })}
+                className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1.5">
+                  Headline Line 1 *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={heroForm.titleLine1}
+                  onChange={e => setHeroForm({ ...heroForm, titleLine1: e.target.value })}
+                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1.5">
+                  Headline Line 2 *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={heroForm.titleLine2}
+                  onChange={e => setHeroForm({ ...heroForm, titleLine2: e.target.value })}
+                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1.5">
+                Highlighted Word in Headline
+              </label>
+              <input
+                type="text"
+                value={heroForm.highlightWord}
+                onChange={e => setHeroForm({ ...heroForm, highlightWord: e.target.value })}
+                className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none font-bold text-brand-red"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1.5">
+                Sub-Headline Description
+              </label>
+              <textarea
+                rows={3}
+                value={heroForm.subtitle}
+                onChange={e => setHeroForm({ ...heroForm, subtitle: e.target.value })}
+                className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1.5">
+                  Primary CTA Text
+                </label>
+                <input
+                  type="text"
+                  value={heroForm.primaryCtaText}
+                  onChange={e => setHeroForm({ ...heroForm, primaryCtaText: e.target.value })}
+                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1.5">
+                  Secondary CTA Text
+                </label>
+                <input
+                  type="text"
+                  value={heroForm.secondaryCtaText}
+                  onChange={e => setHeroForm({ ...heroForm, secondaryCtaText: e.target.value })}
+                  className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-white/10 flex items-center justify-between">
+              {heroSaved ? (
+                <span className="text-xs text-emerald-400 flex items-center gap-1.5 font-bold">
+                  <Check className="w-4 h-4" /> Homepage Hero Updated!
+                </span>
+              ) : <div />}
+
+              <button
+                type="submit"
+                className="px-6 py-2.5 rounded-xl bg-brand-red hover:bg-brand-red-dark text-white font-heading font-bold text-xs uppercase tracking-wider flex items-center gap-2 shadow-lg shadow-brand-red/30"
+              >
+                <Save className="w-3.5 h-3.5" />
+                <span>Save Changes</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* TAB 4: PORTFOLIO CMS */}
+      {activeTab === "PORTFOLIO" && (
         <div className="space-y-4 animate-fade-in">
           <div className="flex items-center justify-between">
             <p className="text-xs text-neutral-400">
-              Publish editorial articles, guides & design tutorials
+              Manage client showcase case studies displayed on the portfolio page
             </p>
             <button
-              onClick={openAddBlog}
+              onClick={openAddPortfolio}
               className="px-4 py-2 rounded-xl bg-brand-red hover:bg-brand-red-dark text-white text-xs font-bold font-heading uppercase tracking-wider flex items-center gap-1.5"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>Add Article</span>
+              <span>Add Project</span>
             </button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {blogPosts.map((post) => (
+            {portfolioProjects.map((p) => (
               <div
-                key={post.id}
+                key={p.id}
                 className="bg-brand-dark-card border border-white/10 rounded-3xl overflow-hidden shadow-xl flex flex-col justify-between"
               >
                 <div>
                   <img
-                    src={post.coverImage}
-                    alt={post.title}
-                    className="w-full h-40 object-cover border-b border-white/10"
+                    src={p.coverImage}
+                    alt={p.title}
+                    className="w-full h-44 object-cover border-b border-white/10"
                   />
                   <div className="p-6">
-                    <span className="text-[10px] font-bold uppercase text-brand-red">{post.category}</span>
-                    <h3 className="font-heading font-bold text-base text-white mt-1 line-clamp-2">{post.title}</h3>
-                    <p className="text-xs text-neutral-400 mt-2 line-clamp-2">{post.excerpt}</p>
+                    <span className="text-[10px] font-bold uppercase text-brand-red">{p.category}</span>
+                    <h3 className="font-heading font-bold text-base text-white mt-1">{p.title}</h3>
+                    <p className="text-xs text-neutral-400 mt-1">Client: {p.client}</p>
                   </div>
                 </div>
 
                 <div className="p-6 pt-0 flex items-center justify-between border-t border-white/5 mt-4">
-                  <span className="text-[10px] text-neutral-500">{post.readTime}</span>
-                  <button
-                    onClick={() => handleDeleteBlog(post.id)}
-                    className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                  <span className="text-[10px] text-neutral-500">{p.date}</span>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => {
+                        setEditingProject(p);
+                        setPortfolioForm({
+                          title: p.title,
+                          slug: p.slug,
+                          category: p.category,
+                          client: p.client,
+                          coverImage: p.coverImage,
+                          description: p.description,
+                          challenge: p.challenge || "",
+                          solution: p.solution || "",
+                          deliverables: p.deliverables.join(", "),
+                          tags: p.tags.join(", "),
+                          date: p.date,
+                          published: p.published,
+                        });
+                        setIsPortfolioModalOpen(true);
+                      }}
+                      className="p-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-neutral-300"
+                    >
+                      <Edit className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={() => handleDeletePortfolio(p.id)}
+                      className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -628,101 +835,199 @@ export default function CmsPage() {
         </div>
       )}
 
-      {/* PORTFOLIO MODAL */}
-      {isPortfolioModalOpen && (
+      {/* TAB 6: BLOG CMS */}
+      {activeTab === "BLOG" && (
+        <div className="space-y-4 animate-fade-in">
+          <div className="flex items-center justify-between">
+            <p className="text-xs text-neutral-400">
+              Publish editorial articles, guides & design tutorials
+            </p>
+            <button
+              onClick={openAddBlog}
+              className="px-4 py-2 rounded-xl bg-brand-red hover:bg-brand-red-dark text-white text-xs font-bold font-heading uppercase tracking-wider flex items-center gap-1.5"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>Add Article</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {blogPosts.map((post) => (
+              <div
+                key={post.id}
+                className="bg-brand-dark-card border border-white/10 rounded-3xl overflow-hidden shadow-xl flex flex-col justify-between"
+              >
+                <div>
+                  <img
+                    src={post.coverImage}
+                    alt={post.title}
+                    className="w-full h-40 object-cover border-b border-white/10"
+                  />
+                  <div className="p-6">
+                    <span className="text-[10px] font-bold uppercase text-brand-red">{post.category}</span>
+                    <h3 className="font-heading font-bold text-base text-white mt-1 line-clamp-2">{post.title}</h3>
+                    <p className="text-xs text-neutral-400 mt-2 line-clamp-2">{post.excerpt}</p>
+                  </div>
+                </div>
+
+                <div className="p-6 pt-0 flex items-center justify-between border-t border-white/5 mt-4">
+                  <span className="text-[10px] text-neutral-500">{post.readTime}</span>
+                  <button
+                    onClick={() => handleDeleteBlog(post.id)}
+                    className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500 text-red-400 hover:text-white"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* EDIT SHOOT PACKAGE MODAL (/book) */}
+      {isShootModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsPortfolioModalOpen(false)} />
-          <div className="w-full max-w-lg bg-brand-dark-card border border-white/15 rounded-3xl p-6 sm:p-8 shadow-2xl relative z-10 animate-fade-in max-h-[90vh] overflow-y-auto">
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsShootModalOpen(false)} />
+          <div className="w-full max-w-md bg-brand-dark-card border border-white/15 rounded-3xl p-6 sm:p-8 shadow-2xl relative z-10 animate-fade-in">
             <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-6">
-              <h2 className="font-heading font-bold text-xl text-white">
-                {editingProject ? "Edit Portfolio Project" : "Add Portfolio Project"}
-              </h2>
-              <button onClick={() => setIsPortfolioModalOpen(false)} className="text-neutral-400 hover:text-white">
+              <h2 className="font-heading font-bold text-xl text-white">Edit Shoot Package Price</h2>
+              <button onClick={() => setIsShootModalOpen(false)} className="text-neutral-400 hover:text-white">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSavePortfolio} className="space-y-4">
+            <form onSubmit={handleSaveShootPkg} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1">
-                  Project Title *
+                  Package Title *
                 </label>
                 <input
                   type="text"
                   required
-                  value={portfolioForm.title}
-                  onChange={e => setPortfolioForm({ ...portfolioForm, title: e.target.value })}
+                  value={shootPkgForm.title}
+                  onChange={e => setShootPkgForm({ ...shootPkgForm, title: e.target.value })}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1">
-                    Client Name *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={portfolioForm.client}
-                    onChange={e => setPortfolioForm({ ...portfolioForm, client: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1">
-                    Category
-                  </label>
-                  <select
-                    value={portfolioForm.category}
-                    onChange={e => setPortfolioForm({ ...portfolioForm, category: e.target.value as any })}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-black/50 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none"
-                  >
-                    <option value="Branding">Branding</option>
-                    <option value="Printing">Printing</option>
-                    <option value="Graphic Design">Graphic Design</option>
-                    <option value="Photography">Photography</option>
-                    <option value="Videography">Videography</option>
-                    <option value="Digital Marketing">Digital Marketing</option>
-                  </select>
-                </div>
-              </div>
-
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1">
-                  Cover Image URL (Unsplash or CDN)
+                  Base Price in LKR (Numerals only) *
                 </label>
                 <input
-                  type="url"
+                  type="number"
+                  min="0"
                   required
-                  value={portfolioForm.coverImage}
-                  onChange={e => setPortfolioForm({ ...portfolioForm, coverImage: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none"
+                  value={shootPkgForm.basePrice}
+                  onChange={e => setShootPkgForm({ ...shootPkgForm, basePrice: parseFloat(e.target.value) || 0 })}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:border-brand-red focus:outline-none font-mono text-emerald-400 font-bold"
                 />
+                <span className="text-[10px] text-neutral-500 mt-1 block">
+                  Preview: {formatCurrency(shootPkgForm.basePrice)}
+                </span>
               </div>
 
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1">
-                  Description
+                  Subtitle / Scope Description
                 </label>
                 <textarea
                   rows={2}
-                  value={portfolioForm.description}
-                  onChange={e => setPortfolioForm({ ...portfolioForm, description: e.target.value })}
+                  value={shootPkgForm.subtitle}
+                  onChange={e => setShootPkgForm({ ...shootPkgForm, subtitle: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none"
+                />
+              </div>
+
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="checkbox"
+                  id="shootPopular"
+                  checked={shootPkgForm.popular}
+                  onChange={e => setShootPkgForm({ ...shootPkgForm, popular: e.target.checked })}
+                  className="w-4 h-4 rounded border-white/10 bg-white/5 text-brand-red focus:ring-0 cursor-pointer"
+                />
+                <label htmlFor="shootPopular" className="text-xs text-neutral-300 cursor-pointer select-none">
+                  Highlight as &quot;Most Popular&quot; in Booking Wizard
+                </label>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
+                <button
+                  type="button"
+                  onClick={() => setIsShootModalOpen(false)}
+                  className="px-4 py-2.5 rounded-xl text-neutral-400 hover:text-white text-xs font-semibold"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 rounded-xl bg-brand-red hover:bg-brand-red-dark text-white font-heading font-bold text-xs uppercase tracking-wider shadow-lg shadow-brand-red/30"
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT SHOOT ADDON MODAL (/book) */}
+      {isAddonModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsAddonModalOpen(false)} />
+          <div className="w-full max-w-md bg-brand-dark-card border border-white/15 rounded-3xl p-6 sm:p-8 shadow-2xl relative z-10 animate-fade-in">
+            <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-6">
+              <h2 className="font-heading font-bold text-xl text-white">
+                {editingAddon ? "Edit Add-on Service" : "Add New Add-on Service"}
+              </h2>
+              <button onClick={() => setIsAddonModalOpen(false)} className="text-neutral-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveAddon} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1">
+                  Add-on Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={addonForm.name}
+                  onChange={e => setAddonForm({ ...addonForm, name: e.target.value })}
+                  placeholder="e.g. 4K Drone Aerial Cinematography"
                   className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1">
-                  Deliverables (Comma-separated)
+                  Add-on Price in LKR *
                 </label>
                 <input
-                  type="text"
-                  value={portfolioForm.deliverables}
-                  onChange={e => setPortfolioForm({ ...portfolioForm, deliverables: e.target.value })}
-                  placeholder="Brand Identity, 3D Mockup, Packaging"
+                  type="number"
+                  min="0"
+                  required
+                  value={addonForm.price}
+                  onChange={e => setAddonForm({ ...addonForm, price: parseFloat(e.target.value) || 0 })}
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm focus:border-brand-red focus:outline-none font-mono text-emerald-400 font-bold"
+                />
+                <span className="text-[10px] text-neutral-500 mt-1 block">
+                  Preview: +{formatCurrency(addonForm.price)}
+                </span>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1">
+                  Short Description
+                </label>
+                <textarea
+                  rows={2}
+                  value={addonForm.desc}
+                  onChange={e => setAddonForm({ ...addonForm, desc: e.target.value })}
+                  placeholder="e.g. Licensed aerial operator for cinematic overhead angles"
                   className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none"
                 />
               </div>
@@ -730,16 +1035,16 @@ export default function CmsPage() {
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
                 <button
                   type="button"
-                  onClick={() => setIsPortfolioModalOpen(false)}
+                  onClick={() => setIsAddonModalOpen(false)}
                   className="px-4 py-2.5 rounded-xl text-neutral-400 hover:text-white text-xs font-semibold"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-6 py-2.5 rounded-xl bg-brand-red hover:bg-brand-red-dark text-white font-heading font-bold text-xs uppercase tracking-wider"
+                  className="px-6 py-2.5 rounded-xl bg-brand-red hover:bg-brand-red-dark text-white font-heading font-bold text-xs uppercase tracking-wider shadow-lg shadow-brand-red/30"
                 >
-                  Save Project
+                  Save Add-on
                 </button>
               </div>
             </form>
@@ -870,28 +1175,30 @@ export default function CmsPage() {
         </div>
       )}
 
-      {/* BLOG MODAL */}
-      {isBlogModalOpen && (
+      {/* PORTFOLIO MODAL */}
+      {isPortfolioModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsBlogModalOpen(false)} />
-          <div className="w-full max-w-xl bg-brand-dark-card border border-white/15 rounded-3xl p-6 sm:p-8 shadow-2xl relative z-10 animate-fade-in max-h-[90vh] overflow-y-auto">
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setIsPortfolioModalOpen(false)} />
+          <div className="w-full max-w-lg bg-brand-dark-card border border-white/15 rounded-3xl p-6 sm:p-8 shadow-2xl relative z-10 animate-fade-in max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-6">
-              <h2 className="font-heading font-bold text-xl text-white">Create Blog Article</h2>
-              <button onClick={() => setIsBlogModalOpen(false)} className="text-neutral-400 hover:text-white">
+              <h2 className="font-heading font-bold text-xl text-white">
+                {editingProject ? "Edit Portfolio Project" : "Add Portfolio Project"}
+              </h2>
+              <button onClick={() => setIsPortfolioModalOpen(false)} className="text-neutral-400 hover:text-white">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveBlog} className="space-y-4">
+            <form onSubmit={handleSavePortfolio} className="space-y-4">
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1">
-                  Article Title *
+                  Project Title *
                 </label>
                 <input
                   type="text"
                   required
-                  value={blogForm.title}
-                  onChange={e => setBlogForm({ ...blogForm, title: e.target.value })}
+                  value={portfolioForm.title}
+                  onChange={e => setPortfolioForm({ ...portfolioForm, title: e.target.value })}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none"
                 />
               </div>
@@ -899,70 +1206,78 @@ export default function CmsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1">
-                    Category
+                    Client Name *
                   </label>
                   <input
                     type="text"
-                    value={blogForm.category}
-                    onChange={e => setBlogForm({ ...blogForm, category: e.target.value })}
+                    required
+                    value={portfolioForm.client}
+                    onChange={e => setPortfolioForm({ ...portfolioForm, client: e.target.value })}
                     className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1">
-                    Read Time
+                    Category
                   </label>
-                  <input
-                    type="text"
-                    value={blogForm.readTime}
-                    onChange={e => setBlogForm({ ...blogForm, readTime: e.target.value })}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none"
-                  />
+                  <select
+                    value={portfolioForm.category}
+                    onChange={e => setPortfolioForm({ ...portfolioForm, category: e.target.value as any })}
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-black/50 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none"
+                  >
+                    <option value="Branding">Branding</option>
+                    <option value="Printing">Printing</option>
+                    <option value="Graphic Design">Graphic Design</option>
+                    <option value="Photography">Photography</option>
+                    <option value="Videography">Videography</option>
+                    <option value="Digital Marketing">Digital Marketing</option>
+                  </select>
                 </div>
               </div>
 
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1">
-                  Cover Image URL
+                  Cover Image URL (Unsplash or CDN)
                 </label>
                 <input
                   type="url"
                   required
-                  value={blogForm.coverImage}
-                  onChange={e => setBlogForm({ ...blogForm, coverImage: e.target.value })}
+                  value={portfolioForm.coverImage}
+                  onChange={e => setPortfolioForm({ ...portfolioForm, coverImage: e.target.value })}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1">
-                  Short Excerpt
+                  Description
                 </label>
                 <textarea
                   rows={2}
-                  value={blogForm.excerpt}
-                  onChange={e => setBlogForm({ ...blogForm, excerpt: e.target.value })}
+                  value={portfolioForm.description}
+                  onChange={e => setPortfolioForm({ ...portfolioForm, description: e.target.value })}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-1">
-                  Full Article Markdown Content
+                  Deliverables (Comma-separated)
                 </label>
-                <textarea
-                  rows={6}
-                  value={blogForm.content}
-                  onChange={e => setBlogForm({ ...blogForm, content: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs font-mono focus:border-brand-red focus:outline-none"
+                <input
+                  type="text"
+                  value={portfolioForm.deliverables}
+                  onChange={e => setPortfolioForm({ ...portfolioForm, deliverables: e.target.value })}
+                  placeholder="Brand Identity, 3D Mockup, Packaging"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none"
                 />
               </div>
 
               <div className="flex items-center justify-end gap-3 pt-4 border-t border-white/10">
                 <button
                   type="button"
-                  onClick={() => setIsBlogModalOpen(false)}
+                  onClick={() => setIsPortfolioModalOpen(false)}
                   className="px-4 py-2.5 rounded-xl text-neutral-400 hover:text-white text-xs font-semibold"
                 >
                   Cancel
@@ -971,7 +1286,7 @@ export default function CmsPage() {
                   type="submit"
                   className="px-6 py-2.5 rounded-xl bg-brand-red hover:bg-brand-red-dark text-white font-heading font-bold text-xs uppercase tracking-wider"
                 >
-                  Publish Article
+                  Save Project
                 </button>
               </div>
             </form>

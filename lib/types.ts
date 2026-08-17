@@ -548,3 +548,20 @@ export interface ShootBooking {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface ShootPackageOption {
+  id: string;
+  type: ShootType;
+  title: string;
+  subtitle: string;
+  basePrice: number;
+  popular?: boolean;
+}
+
+export interface ShootAddonOption {
+  id: string;
+  name: string;
+  price: number;
+  desc: string;
+}
+

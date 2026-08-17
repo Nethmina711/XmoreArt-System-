@@ -17,7 +17,9 @@ import {
   CompanySettings, 
   AppNotification, 
   ActivityLog,
-  ShootBooking
+  ShootBooking,
+  ShootPackageOption,
+  ShootAddonOption
 } from "../types";
 
 export const initialCompanySettings: CompanySettings = {
@@ -923,4 +925,68 @@ export const initialNotifications: AppNotification[] = [
 export const initialActivityLogs: ActivityLog[] = [];
 
 export const initialBookings: ShootBooking[] = [];
+
+export const initialShootPackages: ShootPackageOption[] = [
+  {
+    id: "pkg_wedding_full",
+    type: "WEDDING_FULL",
+    title: "Full Day Wedding Day",
+    subtitle: "Complete Poruwa / Church + Reception photography & cinematic film",
+    basePrice: 185000,
+    popular: true,
+  },
+  {
+    id: "pkg_pre_wedding",
+    type: "PRE_WEDDING",
+    title: "Pre-Wedding / Engagement",
+    subtitle: "Outdoor romantic couple shoot with styling & mood concepts",
+    basePrice: 65000,
+    popular: true,
+  },
+  {
+    id: "pkg_wedding_homecoming",
+    type: "WEDDING_HOMECOMING",
+    title: "Homecoming Function",
+    subtitle: "Complete homecoming photography & video highlights",
+    basePrice: 120000,
+  },
+  {
+    id: "pkg_model_portfolio",
+    type: "MODEL_PORTFOLIO",
+    title: "Model & Fashion Portfolio",
+    subtitle: "High-fashion lookbook, runway & personal branding shoots",
+    basePrice: 45000,
+  },
+  {
+    id: "pkg_commercial_video",
+    type: "COMMERCIAL_VIDEO",
+    title: "Commercial & Brand Ad Video",
+    subtitle: "Product, hotel & corporate promotional cinematography",
+    basePrice: 95000,
+  },
+  {
+    id: "pkg_event_coverage",
+    type: "EVENT_COVERAGE",
+    title: "Birthday & Event Coverage",
+    subtitle: "Anniversaries, get-togethers & private parties",
+    basePrice: 55000,
+  },
+  {
+    id: "pkg_studio_portrait",
+    type: "STUDIO_PORTRAIT",
+    title: "In-Studio Portrait Session",
+    subtitle: "Family, graduation, executive & newborn portraiture",
+    basePrice: 25000,
+  },
+];
+
+export const initialShootAddons: ShootAddonOption[] = [
+  { id: "drone", name: "4K Drone Aerial Cinematography", price: 35000, desc: "Licensed aerial operator for cinematic overhead angles" },
+  { id: "album_luxury", name: "12x24 Flush Mount Leather Album", price: 45000, desc: "Handcrafted wooden box & seamless panoramic pages" },
+  { id: "same_day_teaser", name: "Same-Day 60s Social Media Teaser", price: 25000, desc: "Delivered on wedding night for instant Instagram/TikTok" },
+  { id: "led_wall", name: "LED Wall 4K Pre-shoot Loop Video", price: 18000, desc: "Color-graded loop prepared for reception backdrop" },
+  { id: "thank_you_cards", name: "Instant Thank-You Cards (100 pcs)", price: 15000, desc: "Printed during event with wedding day photo" },
+  { id: "live_stream", name: "Multi-Cam Live Streaming (1080p)", price: 40000, desc: "Private YouTube / Facebook stream for overseas family" },
+  { id: "second_shooter", name: "Additional Master Photographer", price: 30000, desc: "Extra candid photographer for candid guest moments" },
+];
 

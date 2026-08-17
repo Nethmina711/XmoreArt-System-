@@ -19,7 +19,9 @@ import {
   CompanySettings, 
   AppNotification, 
   ActivityLog,
-  ShootBooking
+  ShootBooking,
+  ShootPackageOption,
+  ShootAddonOption
 } from "../types";
 
 import {
@@ -41,7 +43,9 @@ import {
   initialLeads,
   initialNotifications,
   initialActivityLogs,
-  initialBookings
+  initialBookings,
+  initialShootPackages,
+  initialShootAddons
 } from "./seedData";
 
 const STORAGE_KEYS = {
@@ -64,6 +68,8 @@ const STORAGE_KEYS = {
   NOTIFICATIONS: "xmore_notifications_final",
   ACTIVITY_LOGS: "xmore_activity_logs_final",
   BOOKINGS: "xmore_bookings_final",
+  SHOOT_PACKAGES: "xmore_shoot_packages_final",
+  SHOOT_ADDONS: "xmore_shoot_addons_final",
 };
 
 function getItem<T>(key: string, defaultValue: T): T {
@@ -557,6 +563,40 @@ export const DataStore = {
     setItem(STORAGE_KEYS.BOOKINGS, list);
   },
 
+  // Shoot Packages Configuration (for /book wizard)
+  getShootPackages: (): ShootPackageOption[] => getItem(STORAGE_KEYS.SHOOT_PACKAGES, initialShootPackages),
+  saveShootPackage: (pkg: ShootPackageOption): void => {
+    const list = DataStore.getShootPackages();
+    const index = list.findIndex(p => p.id === pkg.id || p.type === pkg.type);
+    if (index >= 0) {
+      list[index] = pkg;
+    } else {
+      list.push(pkg);
+    }
+    setItem(STORAGE_KEYS.SHOOT_PACKAGES, list);
+  },
+  deleteShootPackage: (id: string): void => {
+    const list = DataStore.getShootPackages().filter(p => p.id !== id && p.type !== id);
+    setItem(STORAGE_KEYS.SHOOT_PACKAGES, list);
+  },
+
+  // Shoot Addons Configuration (for /book wizard)
+  getShootAddons: (): ShootAddonOption[] => getItem(STORAGE_KEYS.SHOOT_ADDONS, initialShootAddons),
+  saveShootAddon: (addon: ShootAddonOption): void => {
+    const list = DataStore.getShootAddons();
+    const index = list.findIndex(a => a.id === addon.id);
+    if (index >= 0) {
+      list[index] = addon;
+    } else {
+      list.push(addon);
+    }
+    setItem(STORAGE_KEYS.SHOOT_ADDONS, list);
+  },
+  deleteShootAddon: (id: string): void => {
+    const list = DataStore.getShootAddons().filter(a => a.id !== id);
+    setItem(STORAGE_KEYS.SHOOT_ADDONS, list);
+  },
+
   // Reset Data Seeder
   resetToInitialSeedData: (): void => {
     if (typeof window === "undefined") return;
@@ -580,6 +620,8 @@ export const DataStore = {
     setItem(STORAGE_KEYS.NOTIFICATIONS, initialNotifications);
     setItem(STORAGE_KEYS.ACTIVITY_LOGS, initialActivityLogs);
     setItem(STORAGE_KEYS.BOOKINGS, initialBookings);
+    setItem(STORAGE_KEYS.SHOOT_PACKAGES, initialShootPackages);
+    setItem(STORAGE_KEYS.SHOOT_ADDONS, initialShootAddons);
     window.dispatchEvent(new Event("xmore_data_updated"));
   }
 };
