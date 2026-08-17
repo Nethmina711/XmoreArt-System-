@@ -18,7 +18,8 @@ import {
   MessageCircle,
   Clock,
   Layers,
-  ShieldCheck
+  ShieldCheck,
+  Heart
 } from "lucide-react";
 
 interface ServiceDetailViewProps {
@@ -70,6 +71,16 @@ export const ServiceDetailView: React.FC<ServiceDetailViewProps> = ({ service })
                   <Sparkles className="w-4 h-4" />
                   <span>REQUEST {service.name.toUpperCase()} QUOTE</span>
                 </Link>
+
+                {(service.slug === "photography" || service.slug === "videography") && (
+                  <Link
+                    href="/book"
+                    className="px-7 py-4 rounded-xl bg-brand-red/20 hover:bg-brand-red/30 text-white border border-brand-red/50 font-heading font-bold text-xs uppercase tracking-wider transition-all flex items-center gap-2 shadow-lg"
+                  >
+                    <Heart className="w-4 h-4 text-brand-red fill-brand-red/20" />
+                    <span>BOOK WEDDING / SHOOT</span>
+                  </Link>
+                )}
 
                 <a
                   href={whatsappInquiryUrl}

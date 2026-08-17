@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { useSettings } from "@/lib/context/SettingsContext";
-import { Sparkles, ArrowRight, Play, CheckCircle2 } from "lucide-react";
+import { Sparkles, ArrowRight, Play, CheckCircle2, Heart, Film } from "lucide-react";
 
 export const Hero: React.FC = () => {
   const { websiteContent } = useSettings();
@@ -51,20 +51,28 @@ export const Hero: React.FC = () => {
         </p>
 
         {/* CTAs */}
-        <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto">
+        <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 max-w-xl mx-auto">
           <Link
             href="/quote"
-            className="w-full sm:w-auto px-8 py-4 rounded-xl bg-brand-red hover:bg-brand-red-dark text-white font-heading font-bold text-sm tracking-wider uppercase transition-all shadow-xl shadow-brand-red/30 hover:shadow-brand-red/50 hover:-translate-y-0.5 flex items-center justify-center gap-2.5"
+            className="w-full sm:w-auto px-7 py-4 rounded-xl bg-brand-red hover:bg-brand-red-dark text-white font-heading font-bold text-sm tracking-wider uppercase transition-all shadow-xl shadow-brand-red/30 hover:shadow-brand-red/50 hover:-translate-y-0.5 flex items-center justify-center gap-2"
           >
             <Sparkles className="w-4 h-4" />
             <span>{hero.primaryCtaText}</span>
           </Link>
 
           <Link
-            href="/portfolio"
-            className="w-full sm:w-auto px-8 py-4 rounded-xl bg-white/10 hover:bg-white/15 text-white border border-white/20 font-heading font-semibold text-sm tracking-wider uppercase transition-all flex items-center justify-center gap-2"
+            href="/book"
+            className="w-full sm:w-auto px-7 py-4 rounded-xl bg-brand-red/15 hover:bg-brand-red/25 text-white border border-brand-red/40 font-heading font-bold text-sm tracking-wider uppercase transition-all flex items-center justify-center gap-2 hover:-translate-y-0.5"
           >
-            <span>{hero.secondaryCtaText}</span>
+            <Heart className="w-4 h-4 text-brand-red fill-brand-red/20" />
+            <span>BOOK WEDDING / SHOOT</span>
+          </Link>
+
+          <Link
+            href="/portfolio"
+            className="w-full sm:w-auto px-6 py-4 rounded-xl bg-white/10 hover:bg-white/15 text-neutral-300 hover:text-white border border-white/20 font-heading font-semibold text-sm tracking-wider uppercase transition-all flex items-center justify-center gap-2"
+          >
+            <span>Portfolio</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
         </div>
@@ -88,15 +96,15 @@ export const Hero: React.FC = () => {
           <div className="flex items-center gap-3">
             <CheckCircle2 className="w-5 h-5 text-brand-red shrink-0" />
             <div className="text-xs">
-              <p className="text-white font-bold">100% Custom Work</p>
-              <p className="text-neutral-400">Original strategic designs</p>
+              <p className="text-white font-bold">4K Cinema & Drone</p>
+              <p className="text-neutral-400">Licensed master wedding crew</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <CheckCircle2 className="w-5 h-5 text-brand-red shrink-0" />
             <div className="text-xs">
-              <p className="text-white font-bold">Transparent Pricing</p>
-              <p className="text-neutral-400">Itemized LKR quotations</p>
+              <p className="text-white font-bold">Nakath Precision</p>
+              <p className="text-neutral-400">Flawless Poruwa coverage</p>
             </div>
           </div>
         </div>

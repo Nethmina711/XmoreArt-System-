@@ -4,6 +4,7 @@ import { Footer } from "@/components/public/Footer";
 import { Hero } from "@/components/public/Hero";
 import { WhatWeDo } from "@/components/public/WhatWeDo";
 import { WhyXmore } from "@/components/public/WhyXmore";
+import { WeddingSection } from "@/components/public/WeddingSection";
 import { FeaturedWork } from "@/components/public/FeaturedWork";
 import { ProcessSection } from "@/components/public/ProcessSection";
 import { SocialProof } from "@/components/public/SocialProof";
@@ -24,6 +25,9 @@ export default function HomePage() {
 
       {/* Why Xmore - 4 Strategic Pillars */}
       <WhyXmore />
+
+      {/* Dedicated Wedding & Production Shoot Showcase & Packages */}
+      <WeddingSection />
 
       {/* Dynamic Featured Portfolio Projects */}
       <FeaturedWork />

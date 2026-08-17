@@ -613,6 +613,62 @@ export const initialPortfolioProjects: PortfolioProject[] = [
 
 export const initialPackages: PackageItem[] = [
   {
+    id: "pkg-w1",
+    name: "Royal Signature Wedding Experience",
+    category: "Wedding",
+    description: "Our flagship all-inclusive wedding cinema & luxury flush mount photography package.",
+    price: 185000,
+    priceDisplay: "Rs. 185,000",
+    popular: true,
+    features: [
+      "Full Day Coverage: Bridal Dressing, Poruwa Ceremony & Reception",
+      "2 Master Photographers + 2 4K Cinematographers",
+      "4K Drone Aerial Cinematography by Licensed Pilot",
+      "40-Page 12x24 Flush Mount Luxury Leather Album + Handcrafted Wooden Box",
+      "Two 8x16 Parent Mini Albums Included",
+      "6-8 Min Cinematic Highlight Film + Full Ceremony Video",
+      "Same-Day 60s Social Media Instagram Teaser for Wedding Night"
+    ],
+    ctaText: "Reserve Wedding Date",
+    published: true
+  },
+  {
+    id: "pkg-w2",
+    name: "Pre-Wedding & Couple Engagement Story",
+    category: "Wedding",
+    description: "Romantic outdoor couple session with editorial styling and 4K romance teaser film.",
+    price: 65000,
+    priceDisplay: "Rs. 65,000",
+    features: [
+      "Full Day Outdoor Location Shoot (Ella / Monaragala / Beach)",
+      "Creative Storyboarding & Concept Mood Board Styling",
+      "4K Cinematic 60s Romance Teaser Video Clip",
+      "50 Master Retouched High-Resolution Portraits",
+      "16x24 Framed Reception Welcome Portrait Included",
+      "All Raw Digital Originals via Cloud Vault"
+    ],
+    ctaText: "Book Pre-Wedding",
+    published: true
+  },
+  {
+    id: "pkg-w3",
+    name: "Homecoming & Evening Gala Coverage",
+    category: "Wedding",
+    description: "Complete elegant coverage for your homecoming day and second day celebration.",
+    price: 120000,
+    priceDisplay: "Rs. 120,000",
+    features: [
+      "Complete Homecoming Reception & Going Away Coverage",
+      "1 Senior Photographer + 1 Senior Cinematographer",
+      "30-Page 10x20 Magazine Style Flush Mount Album",
+      "4-Minute Cinematic Highlight Video",
+      "300+ Color-Graded High-Resolution Digital Files",
+      "Express 48-Hour Digital Photo Delivery"
+    ],
+    ctaText: "Book Homecoming",
+    published: true
+  },
+  {
     id: "pkg-1",
     name: "Starter Brand Identity",
     category: "Branding",
@@ -684,26 +740,6 @@ export const initialPackages: PackageItem[] = [
       "Full 2-Min Film + 30s Social Media Teaser"
     ],
     ctaText: "Book Video Production",
-    published: true
-  },
-  {
-    id: "pkg-5",
-    name: "Premium Wedding Heritage Album",
-    category: "Photography",
-    description: "Timeless photo and video documentation of your most memorable day.",
-    price: 120000,
-    priceDisplay: "Rs. 120,000",
-    popular: true,
-    features: [
-      "Full Day Photography & Videography Coverage",
-      "2 Senior Photographers + 2 Cinematographers",
-      "4K Drone Aerial Venue Shots",
-      "30-Page 12x24 Flush Mount Velvet Leather Album",
-      "Two 8x16 Parent Mini Albums",
-      "5-Minute Cinematic Film + Full Ceremony Video",
-      "Express 24-Hour Social Highlights Pack"
-    ],
-    ctaText: "Inquire Wedding Package",
     published: true
   },
   {

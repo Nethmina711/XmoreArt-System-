@@ -16,7 +16,7 @@ export default function PackagesPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const packages = DataStore.getPackages().filter(p => p.published);
 
-  const categories = ["All", "Branding", "Social Media", "Videography", "Photography", "Custom"];
+  const categories = ["All", "Wedding", "Branding", "Social Media", "Videography", "Custom"];
 
   const filteredPackages = selectedCategory === "All"
     ? packages
@@ -42,8 +42,26 @@ export default function PackagesPage() {
           </h1>
 
           <p className="mt-4 text-base sm:text-lg text-neutral-300 max-w-2xl mx-auto font-light leading-relaxed">
-            Choose a proven, structured creative package or build an itemized custom scope for your business.
+            Explore our curated wedding cinema, branding, and commercial video packages with guaranteed transparent pricing.
           </p>
+
+          {/* Wedding Highlight Banner */}
+          <div className="mt-8 max-w-2xl mx-auto p-4 rounded-2xl bg-brand-red/10 border border-brand-red/30 flex flex-col sm:flex-row items-center justify-between gap-4 text-left">
+            <div>
+              <span className="text-[10px] uppercase font-bold text-brand-red tracking-wider block">
+                Planning a Wedding or Pre-Shoot?
+              </span>
+              <p className="text-xs text-neutral-200">
+                Check date availability & calculate 25% booking advance online.
+              </p>
+            </div>
+            <Link
+              href="/book"
+              className="px-5 py-2.5 rounded-xl bg-brand-red hover:bg-brand-red-dark text-white font-heading font-bold text-xs uppercase tracking-wider shrink-0 shadow-md shadow-brand-red/30 transition-all"
+            >
+              Book Shoot &rarr;
+            </Link>
+          </div>
 
           {/* Category Filter Pills */}
           <div className="mt-8 flex items-center justify-center gap-2 overflow-x-auto pb-2 scrollbar-none">
@@ -69,9 +87,11 @@ export default function PackagesPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredPackages.map((pkg) => {
+              const isWedding = pkg.category === "Wedding";
+              const targetLink = isWedding ? "/book" : `/quote?package=${encodeURIComponent(pkg.name)}`;
               const whatsappPackageUrl = getWhatsAppLink(
                 settings.whatsappNumber,
-                `Hello XMORE ART SOLUTIONS! I would like to book the "${pkg.name}" package (${pkg.priceDisplay}).`
+                `Hello XMORE ART SOLUTIONS! I would like to inquire about the "${pkg.name}" package (${pkg.priceDisplay}).`
               );
 
               return (
@@ -135,7 +155,7 @@ export default function PackagesPage() {
 
                   <div className="space-y-2.5 pt-4">
                     <Link
-                      href={`/quote?package=${encodeURIComponent(pkg.name)}`}
+                      href={targetLink}
                       className={`block w-full py-3.5 rounded-xl text-center font-heading font-bold text-xs uppercase tracking-wider transition-all shadow-md ${
                         pkg.popular
                           ? "bg-brand-red hover:bg-brand-red-dark text-white shadow-brand-red/30"

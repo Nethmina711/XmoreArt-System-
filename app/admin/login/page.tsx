@@ -1,12 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/context/AuthContext";
 import { useSettings } from "@/lib/context/SettingsContext";
-import { DataStore } from "@/lib/data/dataStore";
-import { Employee } from "@/lib/types";
 import { getWhatsAppLink } from "@/lib/utils";
 import { 
   Lock, 
@@ -20,9 +18,6 @@ import {
   HelpCircle,
   KeyRound,
   MessageCircle,
-  Sparkles,
-  UserCheck,
-  ChevronRight,
   X
 } from "lucide-react";
 
@@ -42,27 +37,6 @@ function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [showForgotModal, setShowForgotModal] = useState(false);
-  const [registeredEmployees, setRegisteredEmployees] = useState<Employee[]>([]);
-
-  useEffect(() => {
-    try {
-      const list = DataStore.getEmployees();
-      setRegisteredEmployees(list || []);
-      // If only 1 employee (Master Admin), default to filling master admin
-      if (list && list.length === 1 && !email) {
-        setEmail(list[0].email);
-        setPassword(list[0].password || "admin1234");
-      }
-    } catch {
-      // Fallback
-    }
-  }, []);
-
-  const handleSelectStaff = (emp: Employee) => {
-    setEmail(emp.email);
-    setPassword(emp.password || "admin1234");
-    setErrorMessage("");
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,224 +44,176 @@ function LoginForm() {
     setIsLoading(true);
 
     try {
-      const result = await login(email, password, rememberMe);
-      if (result.success) {
-        // Direct browser navigation ensures session is fully hydrated on the next page
+      const cleanEmail = email.trim();
+      const cleanPassword = password.trim();
+
+      const success = await login(cleanEmail, cleanPassword);
+
+      if (success) {
+        // Direct hydration navigation to ensure persistent session is loaded
         window.location.href = returnUrl || "/admin";
       } else {
-        setErrorMessage(result.error || "Authentication failed. Please verify your credentials.");
+        setErrorMessage("Invalid staff email or password. Please verify your credentials or contact your Super Administrator.");
       }
-    } catch (err: any) {
-      setErrorMessage(err?.message || "An unexpected error occurred during login.");
+    } catch {
+      setErrorMessage("Authentication failed. Please check your network connection and try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  const whatsappHelpUrl = getWhatsAppLink(
+  const whatsappResetUrl = getWhatsAppLink(
     settings.whatsappNumber || "94716666643",
-    `Hello Administrator! I am requesting a password reset for my XMORE staff account: ${email || "[Your Email]"}.`
+    `Hello Miyuru, I need to reset my staff login password for XMORE ART SOLUTIONS platform (Email: ${email || "my work email"}).`
   );
 
-  const fillMasterAdmin = () => {
-    const admin = registeredEmployees.find(e => e.role === "SUPER_ADMIN") || registeredEmployees[0];
-    setEmail(admin ? admin.email : "miyuru@xmoreart.lk");
-    setPassword(admin?.password || "admin1234");
-    setErrorMessage("");
-  };
-
   return (
-    <div className="min-h-screen bg-brand-black text-white flex items-center justify-center p-4 sm:p-6 relative overflow-hidden">
-      {/* Background ambient lighting */}
-      <div className="absolute inset-0 bg-subtle-grid-dark opacity-20 pointer-events-none" />
-      <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-brand-red/10 rounded-full blur-[160px] pointer-events-none" />
+    <div className="min-h-screen bg-brand-black flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative overflow-hidden text-white selection:bg-brand-red selection:text-white">
+      {/* Background Decorative Gradients */}
+      <div className="absolute inset-0 bg-subtle-grid-dark opacity-40 pointer-events-none" />
+      <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[500px] bg-brand-red/10 rounded-full blur-[150px] pointer-events-none" />
 
-      <div className="w-full max-w-md bg-brand-dark-card border border-white/10 rounded-3xl p-6 sm:p-10 shadow-2xl relative z-10 animate-fade-in">
-        
-        {/* Top Back Link & Security Badge */}
-        <div className="flex items-center justify-between mb-6">
-          <Link
-            href="/"
-            className="inline-flex items-center gap-1.5 text-xs text-neutral-400 hover:text-white transition-colors"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Public Site</span>
-          </Link>
+      {/* Return to Public Website link */}
+      <div className="sm:mx-auto sm:w-full sm:max-w-md px-4 mb-6 relative z-10">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 text-xs text-neutral-400 hover:text-white transition-colors"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span>Return to Public Website</span>
+        </Link>
+      </div>
 
-          <span className="inline-flex items-center gap-1 text-[10px] uppercase font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-1 rounded-full">
-            <ShieldCheck className="w-3 h-3" />
-            <span>Encrypted Portal</span>
-          </span>
-        </div>
-
-        {/* Logo & Header */}
-        <div className="flex flex-col items-center text-center mb-8">
-          <div className="mb-4">
-            <BrandLogo size="lg" href="/" />
+      <div className="sm:mx-auto sm:w-full sm:max-w-md px-4 relative z-10">
+        {/* Brand Header */}
+        <div className="text-center mb-8">
+          <div className="flex justify-center mb-4">
+            <BrandLogo size="lg" href="/" showTagline={false} />
           </div>
-          <h1 className="font-heading font-extrabold text-xl uppercase tracking-wider text-white">
-            Staff Portal Sign In
-          </h1>
+          <h2 className="font-heading font-extrabold text-2xl uppercase tracking-tight text-white">
+            Staff Workspace Login
+          </h2>
           <p className="text-xs text-neutral-400 mt-1">
-            Access internal studio operations, CRM & quotations
+            Sign in with your authorized employee credentials
           </p>
         </div>
+      </div>
 
-        {/* Error Alert Box */}
-        {errorMessage && (
-          <div className="mb-6 p-4 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-300 text-xs flex items-start gap-3 animate-slide-up">
-            <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
-            <div className="space-y-1">
-              <p className="font-semibold text-white">Sign In Failed</p>
-              <p className="text-neutral-300 leading-relaxed">{errorMessage}</p>
+      <div className="sm:mx-auto sm:w-full sm:max-w-md px-4 relative z-10">
+        <div className="bg-brand-dark-card border border-white/10 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl">
+          
+          {/* Security Badge */}
+          <div className="flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-white/5 mb-6">
+            <div className="flex items-center gap-2 text-xs text-neutral-300">
+              <ShieldCheck className="w-4 h-4 text-brand-red shrink-0" />
+              <span>Role-Based Access Control</span>
             </div>
+            <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+              Active Security
+            </span>
           </div>
-        )}
 
-        {/* Real Login Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300">
+          {/* Error Message Banner */}
+          {errorMessage && (
+            <div className="mb-6 p-4 rounded-2xl bg-red-500/10 border border-red-500/30 flex items-start gap-3 text-xs text-red-300 animate-fade-in">
+              <AlertCircle className="w-4 h-4 text-brand-red shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="font-bold">Authentication Error</p>
+                <p className="text-[11px] text-red-300/80 mt-0.5">{errorMessage}</p>
+              </div>
+            </div>
+          )}
+
+          {/* Login Form */}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300 mb-2">
                 Staff Email Address
               </label>
-              <button
-                type="button"
-                onClick={fillMasterAdmin}
-                className="text-[11px] text-brand-red hover:underline font-medium"
-              >
-                Auto-Fill Master
-              </button>
+              <div className="relative">
+                <Mail className="w-4 h-4 text-neutral-400 absolute left-3.5 top-3.5 pointer-events-none" />
+                <input
+                  type="text"
+                  required
+                  autoComplete="email"
+                  placeholder="name@xmoreart.lk"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-brand-red focus:outline-none text-white text-xs placeholder-neutral-500 transition-colors"
+                />
+              </div>
             </div>
-            <div className="relative">
-              <Mail className="w-4 h-4 text-neutral-400 absolute left-3.5 top-3.5 pointer-events-none" />
-              <input
-                type="text"
-                required
-                autoComplete="email"
-                placeholder="e.g. miyuru@xmoreart.lk"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-brand-red focus:outline-none text-white text-xs placeholder-neutral-500 transition-colors"
-              />
-            </div>
-          </div>
 
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300">
-                Password
-              </label>
-              <button
-                type="button"
-                onClick={() => setShowForgotModal(true)}
-                className="text-[11px] text-brand-red hover:underline"
-              >
-                Forgot Password?
-              </button>
-            </div>
-            <div className="relative">
-              <Lock className="w-4 h-4 text-neutral-400 absolute left-3.5 top-3.5 pointer-events-none" />
-              <input
-                type={showPassword ? "text" : "password"}
-                required
-                autoComplete="current-password"
-                placeholder="Enter your access password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                className="w-full pl-10 pr-10 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-brand-red focus:outline-none text-white text-xs placeholder-neutral-500 transition-colors"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3.5 top-3.5 text-neutral-400 hover:text-white p-0.5"
-                aria-label={showPassword ? "Hide password" : "Show password"}
-              >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              </button>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between pt-1">
-            <label className="flex items-center gap-2 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={rememberMe}
-                onChange={e => setRememberMe(e.target.checked)}
-                className="w-4 h-4 rounded border-white/10 bg-white/5 text-brand-red focus:ring-0 focus:ring-offset-0 cursor-pointer"
-              />
-              <span className="text-xs text-neutral-400">Remember this browser</span>
-            </label>
-          </div>
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full py-3.5 rounded-xl bg-brand-red hover:bg-brand-red-dark text-white font-heading font-bold text-xs uppercase tracking-wider transition-all shadow-xl shadow-brand-red/30 flex items-center justify-center gap-2 mt-6 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isLoading ? (
-              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : (
-              <>
-                <KeyRound className="w-4 h-4" />
-                <span>SIGN IN TO WORKSPACE</span>
-              </>
-            )}
-          </button>
-        </form>
-
-        {/* Registered Staff Accounts Quick Select */}
-        {registeredEmployees.length > 0 && (
-          <div className="mt-8 pt-6 border-t border-white/10">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[10px] uppercase font-bold text-neutral-400 tracking-wider flex items-center gap-1.5">
-                <UserCheck className="w-3.5 h-3.5 text-brand-red" />
-                <span>Registered Staff Accounts ({registeredEmployees.length}):</span>
-              </span>
-            </div>
-            
-            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-              {registeredEmployees.map((emp) => (
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-xs font-semibold uppercase tracking-wider text-neutral-300">
+                  Password
+                </label>
                 <button
                   type="button"
-                  key={emp.id}
-                  onClick={() => handleSelectStaff(emp)}
-                  className={`w-full p-2.5 rounded-xl border text-left flex items-center justify-between transition-all ${
-                    email.toLowerCase() === emp.email.toLowerCase()
-                      ? "bg-brand-red/10 border-brand-red text-white"
-                      : "bg-white/5 border-white/5 text-neutral-300 hover:bg-white/10 hover:border-white/10"
-                  }`}
+                  onClick={() => setShowForgotModal(true)}
+                  className="text-[11px] text-brand-red hover:underline"
                 >
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <img
-                      src={emp.photo || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop"}
-                      alt={emp.name}
-                      className="w-7 h-7 rounded-lg object-cover border border-white/10 shrink-0"
-                    />
-                    <div className="min-w-0">
-                      <p className="text-xs font-bold text-white truncate">{emp.name}</p>
-                      <p className="text-[10px] text-neutral-400 truncate">{emp.email}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-[9px] uppercase font-bold px-2 py-0.5 rounded-full bg-white/10 text-neutral-300 border border-white/10">
-                      {emp.role.replace("_", " ")}
-                    </span>
-                    <ChevronRight className="w-3.5 h-3.5 text-neutral-500" />
-                  </div>
+                  Forgot Password?
                 </button>
-              ))}
+              </div>
+              <div className="relative">
+                <Lock className="w-4 h-4 text-neutral-400 absolute left-3.5 top-3.5 pointer-events-none" />
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  autoComplete="current-password"
+                  placeholder="Enter your access password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  className="w-full pl-10 pr-10 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-brand-red focus:outline-none text-white text-xs placeholder-neutral-500 transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-3.5 text-neutral-400 hover:text-white p-0.5"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
             </div>
+
+            <div className="flex items-center justify-between pt-1">
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={rememberMe}
+                  onChange={e => setRememberMe(e.target.checked)}
+                  className="w-4 h-4 rounded border-white/10 bg-white/5 text-brand-red focus:ring-0 focus:ring-offset-0 cursor-pointer"
+                />
+                <span className="text-xs text-neutral-400">Remember this browser</span>
+              </label>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full py-3.5 rounded-xl bg-brand-red hover:bg-brand-red-dark text-white font-heading font-bold text-xs uppercase tracking-wider transition-all shadow-xl shadow-brand-red/30 flex items-center justify-center gap-2 mt-6 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading ? (
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              ) : (
+                <>
+                  <KeyRound className="w-4 h-4" />
+                  <span>SIGN IN TO WORKSPACE</span>
+                </>
+              )}
+            </button>
+          </form>
+
+          <div className="mt-6 pt-4 border-t border-white/10 text-center">
+            <p className="text-[11px] text-neutral-500">
+              Internal operations portal for XMORE ART SOLUTIONS. Unauthorized access is prohibited.
+            </p>
           </div>
-        )}
 
-        <div className="mt-6 pt-4 border-t border-white/10 text-center">
-          <p className="text-[11px] text-neutral-500">
-            Internal operations portal for XMORE ART SOLUTIONS. Unauthorized login attempts are logged.
-          </p>
         </div>
-
       </div>
 
       {/* Forgot Password Modal */}
@@ -298,23 +224,30 @@ function LoginForm() {
             onClick={() => setShowForgotModal(false)}
           />
           <div className="w-full max-w-sm bg-brand-dark-card border border-white/15 rounded-3xl p-6 shadow-2xl relative z-10 animate-fade-in text-center">
-            <div className="w-12 h-12 rounded-2xl bg-brand-red/10 text-brand-red flex items-center justify-center mx-auto mb-4">
-              <HelpCircle className="w-6 h-6" />
+            <button
+              onClick={() => setShowForgotModal(false)}
+              className="absolute top-4 right-4 text-neutral-400 hover:text-white"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="w-12 h-12 rounded-2xl bg-brand-red/10 text-brand-red flex items-center justify-center mx-auto mb-4 border border-brand-red/20">
+              <KeyRound className="w-6 h-6" />
             </div>
 
             <h3 className="font-heading font-bold text-lg text-white mb-2">
-              Staff Password Assistance
+              Password Reset Assistance
             </h3>
-            <p className="text-xs text-neutral-400 leading-relaxed mb-6">
-              For security, staff account passwords are managed centrally. Please message your Super Administrator to reset your access PIN.
+            <p className="text-xs text-neutral-400 mb-6 leading-relaxed">
+              For security, employee passwords can only be reset by the Super Administrator. Send a verification request directly to studio administration.
             </p>
 
             <div className="space-y-3">
               <a
-                href={whatsappHelpUrl}
+                href={whatsappResetUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-heading font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2"
+                className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-heading font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 transition-all"
               >
                 <MessageCircle className="w-4 h-4" />
                 <span>Contact Admin via WhatsApp</span>
@@ -323,9 +256,9 @@ function LoginForm() {
               <button
                 type="button"
                 onClick={() => setShowForgotModal(false)}
-                className="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-neutral-300 text-xs"
+                className="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-neutral-300 text-xs font-semibold"
               >
-                Back to Sign In
+                Close
               </button>
             </div>
           </div>
@@ -335,10 +268,10 @@ function LoginForm() {
   );
 }
 
-export default function AdminLoginPage() {
+export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-brand-black flex items-center justify-center">
+      <div className="min-h-screen bg-brand-black flex items-center justify-center text-white">
         <div className="w-8 h-8 border-2 border-brand-red/20 border-t-brand-red rounded-full animate-spin" />
       </div>
     }>
