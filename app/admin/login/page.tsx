@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/lib/context/AuthContext";
 import { useSettings } from "@/lib/context/SettingsContext";
-import { DataStore } from "@/lib/data/dataStore";
 import { getWhatsAppLink } from "@/lib/utils";
 import { 
   Lock, 
@@ -19,11 +18,7 @@ import {
   HelpCircle,
   KeyRound,
   MessageCircle,
-  X,
-  RotateCcw,
-  CheckCircle2,
-  Sparkles,
-  ShieldAlert
+  X
 } from "lucide-react";
 
 import { BrandLogo } from "@/components/common/BrandLogo";
@@ -43,12 +38,6 @@ function LoginForm() {
   const [errorMessage, setErrorMessage] = useState("");
   const [showForgotModal, setShowForgotModal] = useState(false);
 
-  // Recovery state
-  const [recoveryEmail, setRecoveryEmail] = useState("miyuru@xmoreart.lk");
-  const [newPassword, setNewPassword] = useState("admin1234");
-  const [recoverySuccess, setRecoverySuccess] = useState(false);
-  const [recoveryError, setRecoveryError] = useState("");
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage("");
@@ -64,7 +53,7 @@ function LoginForm() {
         // Direct hydration navigation to ensure persistent session is loaded
         window.location.href = returnUrl || "/admin";
       } else {
-        setErrorMessage(result.error || "Invalid staff email or password. You can use the master passkey 'admin1234' if you forgot your password.");
+        setErrorMessage(result.error || "Invalid staff email or password. Please verify your credentials or contact studio administration.");
       }
     } catch {
       setErrorMessage("Authentication failed. Please check your network connection and try again.");
@@ -73,64 +62,9 @@ function LoginForm() {
     }
   };
 
-  const handleInstantMasterReset = () => {
-    setRecoveryError("");
-    try {
-      const employees = DataStore.getEmployees();
-      const admin = employees.find(e => e.role === "SUPER_ADMIN" || e.email.toLowerCase() === "miyuru@xmoreart.lk") || employees[0];
-      if (admin) {
-        admin.password = "admin1234";
-        DataStore.saveEmployee(admin);
-        setEmail(admin.email);
-        setPassword("admin1234");
-        setRecoverySuccess(true);
-        setTimeout(() => {
-          setShowForgotModal(false);
-          setRecoverySuccess(false);
-        }, 1500);
-      } else {
-        setRecoveryError("Master admin account not found.");
-      }
-    } catch {
-      setRecoveryError("Failed to reset password in local storage.");
-    }
-  };
-
-  const handleCustomReset = (e: React.FormEvent) => {
-    e.preventDefault();
-    setRecoveryError("");
-    if (!recoveryEmail.trim() || !newPassword.trim()) return;
-
-    try {
-      const employees = DataStore.getEmployees();
-      const target = employees.find(e => 
-        e.email.toLowerCase() === recoveryEmail.trim().toLowerCase() ||
-        e.name.toLowerCase().includes(recoveryEmail.trim().toLowerCase())
-      );
-
-      if (!target) {
-        setRecoveryError(`No staff account matching "${recoveryEmail}".`);
-        return;
-      }
-
-      target.password = newPassword.trim();
-      DataStore.saveEmployee(target);
-
-      setEmail(target.email);
-      setPassword(newPassword.trim());
-      setRecoverySuccess(true);
-      setTimeout(() => {
-        setShowForgotModal(false);
-        setRecoverySuccess(false);
-      }, 1500);
-    } catch {
-      setRecoveryError("Error updating password.");
-    }
-  };
-
   const whatsappResetUrl = getWhatsAppLink(
     settings.whatsappNumber || "94716666643",
-    `Hello Miyuru, I need to reset my staff login password for XMORE ART SOLUTIONS platform (Email: ${email || "my work email"}).`
+    `Hello XMORE Administration, I need assistance resetting my staff account login credentials (Email: ${email || "my work email"}).`
   );
 
   return (
@@ -186,17 +120,6 @@ function LoginForm() {
               <div className="flex-1">
                 <p className="font-bold">Authentication Error</p>
                 <p className="text-[11px] text-red-300/80 mt-0.5">{errorMessage}</p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEmail("miyuru@xmoreart.lk");
-                    setPassword("admin1234");
-                    setErrorMessage("");
-                  }}
-                  className="mt-2 text-[11px] text-white font-bold underline block"
-                >
-                  Use Master Admin Passkey (admin1234) &rarr;
-                </button>
               </div>
             </div>
           )}
@@ -213,7 +136,7 @@ function LoginForm() {
                   type="text"
                   required
                   autoComplete="email"
-                  placeholder="name@xmoreart.lk (or miyuru)"
+                  placeholder="name@xmoreart.lk"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-brand-red focus:outline-none text-white text-xs placeholder-neutral-500 transition-colors"
@@ -240,7 +163,7 @@ function LoginForm() {
                   type={showPassword ? "text" : "password"}
                   required
                   autoComplete="current-password"
-                  placeholder="•••••••• (Master Key: admin1234)"
+                  placeholder="••••••••"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                   className="w-full pl-10 pr-10 py-3 rounded-xl bg-white/5 border border-white/10 focus:border-brand-red focus:outline-none text-white text-xs placeholder-neutral-500 font-mono transition-colors"
@@ -285,21 +208,21 @@ function LoginForm() {
 
           <div className="mt-6 pt-4 border-t border-white/10 text-center">
             <p className="text-[11px] text-neutral-500">
-              Internal operations portal for XMORE ART SOLUTIONS.
+              Internal operations portal for XMORE ART SOLUTIONS. Unauthorized access is prohibited.
             </p>
           </div>
 
         </div>
       </div>
 
-      {/* Emergency Password Recovery Modal */}
+      {/* Forgot Password Modal */}
       {showForgotModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
             className="fixed inset-0 bg-black/80 backdrop-blur-sm"
             onClick={() => setShowForgotModal(false)}
           />
-          <div className="w-full max-w-md bg-brand-dark-card border border-white/15 rounded-3xl p-6 sm:p-8 shadow-2xl relative z-10 animate-fade-in">
+          <div className="w-full max-w-sm bg-brand-dark-card border border-white/15 rounded-3xl p-6 shadow-2xl relative z-10 animate-fade-in text-center">
             <button
               onClick={() => setShowForgotModal(false)}
               className="absolute top-4 right-4 text-neutral-400 hover:text-white"
@@ -307,104 +230,36 @@ function LoginForm() {
               <X className="w-5 h-5" />
             </button>
 
-            <div className="text-center mb-6">
-              <div className="w-12 h-12 rounded-2xl bg-brand-red/10 text-brand-red flex items-center justify-center mx-auto mb-3 border border-brand-red/20">
-                <RotateCcw className="w-6 h-6" />
-              </div>
-              <h3 className="font-heading font-bold text-lg text-white">
-                Emergency Password Recovery
-              </h3>
-              <p className="text-xs text-neutral-400 mt-1">
-                Instantly reset your password or restore Master Admin access
-              </p>
+            <div className="w-12 h-12 rounded-2xl bg-brand-red/10 text-brand-red flex items-center justify-center mx-auto mb-4 border border-brand-red/20">
+              <KeyRound className="w-6 h-6" />
             </div>
 
-            {recoverySuccess && (
-              <div className="mb-4 p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs flex items-center gap-2 font-bold animate-fade-in">
-                <CheckCircle2 className="w-4 h-4 shrink-0" />
-                <span>Password successfully restored! Signing you in...</span>
-              </div>
-            )}
+            <h3 className="font-heading font-bold text-lg text-white mb-2">
+              Password Assistance
+            </h3>
+            <p className="text-xs text-neutral-400 mb-6 leading-relaxed">
+              For security, employee passwords can only be reset by the Super Administrator. Contact the studio administration directly via WhatsApp.
+            </p>
 
-            {recoveryError && (
-              <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-300 text-xs flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>{recoveryError}</span>
-              </div>
-            )}
-
-            {/* Quick 1-Click Master Reset */}
-            <div className="p-4 rounded-2xl bg-white/5 border border-white/10 mb-5 space-y-2.5">
-              <div className="flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-brand-red" />
-                <span className="text-xs font-bold uppercase text-white">Master Admin 1-Click Reset</span>
-              </div>
-              <p className="text-[11px] text-neutral-400 leading-relaxed">
-                Restore <strong className="text-white">miyuru@xmoreart.lk</strong> access password back to <code className="bg-black/50 px-1.5 py-0.5 rounded text-emerald-400 font-mono">admin1234</code> immediately.
-              </p>
-              <button
-                type="button"
-                onClick={handleInstantMasterReset}
-                className="w-full py-2.5 rounded-xl bg-brand-red hover:bg-brand-red-dark text-white font-heading font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-1.5 shadow-md shadow-brand-red/20 transition-all"
-              >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>Reset Master Password & Auto-Fill</span>
-              </button>
-            </div>
-
-            {/* Reset Specific Employee Account */}
-            <form onSubmit={handleCustomReset} className="space-y-3 pt-2 border-t border-white/10">
-              <span className="text-[10px] uppercase font-bold text-neutral-400 block">
-                Or Reset Any Staff Account:
-              </span>
-              <div>
-                <input
-                  type="text"
-                  required
-                  placeholder="Staff Email or Name (e.g. miyuru)"
-                  value={recoveryEmail}
-                  onChange={e => setRecoveryEmail(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs focus:border-brand-red focus:outline-none"
-                />
-              </div>
-              <div>
-                <input
-                  type="text"
-                  required
-                  placeholder="New Password (e.g. admin1234)"
-                  value={newPassword}
-                  onChange={e => setNewPassword(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-xs font-mono focus:border-brand-red focus:outline-none"
-                />
-              </div>
-              <button
-                type="submit"
-                className="w-full py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold font-heading uppercase tracking-wider transition-all"
-              >
-                Set New Password
-              </button>
-            </form>
-
-            <div className="mt-5 pt-3 border-t border-white/10 flex items-center justify-between text-xs">
+            <div className="space-y-3">
               <a
                 href={whatsappResetUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[11px] text-emerald-400 hover:underline flex items-center gap-1"
+                className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-heading font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-emerald-600/20 transition-all"
               >
-                <MessageCircle className="w-3.5 h-3.5" />
-                <span>WhatsApp Support</span>
+                <MessageCircle className="w-4 h-4" />
+                <span>Contact Admin via WhatsApp</span>
               </a>
 
               <button
                 type="button"
                 onClick={() => setShowForgotModal(false)}
-                className="text-[11px] text-neutral-400 hover:text-white"
+                className="w-full py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-neutral-300 text-xs font-semibold"
               >
-                Cancel
+                Close
               </button>
             </div>
-
           </div>
         </div>
       )}

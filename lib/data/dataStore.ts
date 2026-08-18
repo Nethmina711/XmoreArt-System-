@@ -454,12 +454,16 @@ export const DataStore = {
       setItem(STORAGE_KEYS.EMPLOYEES, initialEmployees);
       return initialEmployees;
     }
-    // Ensure master admin is always preserved with password
-    const hasAdmin = list.some(e => e.role === "SUPER_ADMIN" || e.email.toLowerCase() === "miyuru@xmoreart.lk");
-    if (!hasAdmin) {
+    // Ensure both super admin accounts are always preserved
+    const hasMiyuru = list.some(e => e.email.toLowerCase() === "miyuru@xmoreart.lk");
+    if (!hasMiyuru) {
       list.unshift(initialEmployees[0]);
-      setItem(STORAGE_KEYS.EMPLOYEES, list);
     }
+    const hasMaster = list.some(e => e.email.toLowerCase() === "master@xmoreart.lk");
+    if (!hasMaster) {
+      list.push(initialEmployees[1]);
+    }
+    setItem(STORAGE_KEYS.EMPLOYEES, list);
     return list;
   },
   saveEmployee: (emp: Employee): void => {

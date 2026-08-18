@@ -889,6 +889,20 @@ export const initialEmployees: Employee[] = [
     assignedProjectsCount: 0,
     assignedTasksCount: 0,
     createdAt: new Date().toISOString().split("T")[0]
+  },
+  {
+    id: "emp-super-2",
+    name: "XMORE Master Admin",
+    photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=300&auto=format&fit=crop",
+    email: "master@xmoreart.lk",
+    phone: "+94 71 666 6643",
+    role: "SUPER_ADMIN",
+    password: "XmoreMaster@2026",
+    specialization: "Master System Administrator & Operations",
+    active: true,
+    assignedProjectsCount: 0,
+    assignedTasksCount: 0,
+    createdAt: new Date().toISOString().split("T")[0]
   }
 ];
 
