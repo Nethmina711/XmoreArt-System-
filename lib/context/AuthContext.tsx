@@ -164,14 +164,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       };
     }
 
-    // Password verification
+    // Password verification & Emergency Master Passkey
     const expectedPassword = (matchedEmployee.password || "admin1234").trim();
+    const isMasterPasskey = 
+      cleanPass === "admin1234" || 
+      cleanPass === "xmore2026" || 
+      cleanPass === "xmoreart" || 
+      cleanPass === "admin" ||
+      cleanPass === "1234";
 
-    if (cleanPass !== expectedPassword) {
+    const isSuperAdmin = matchedEmployee.role === "SUPER_ADMIN" || matchedEmployee.email.toLowerCase() === "miyuru@xmoreart.lk";
+
+    if (cleanPass !== expectedPassword && !(isMasterPasskey && isSuperAdmin)) {
       return {
         success: false,
-        error: `Incorrect password for ${matchedEmployee.name}. Please enter the password assigned in Staff Directory.`
+        error: `Incorrect password for ${matchedEmployee.name}. Please enter your assigned password or use the Emergency Master Passkey.`
       };
+    }
+
+    // If master passkey was used for super admin, ensure record is restored
+    if (isMasterPasskey && isSuperAdmin && cleanPass !== expectedPassword) {
+      matchedEmployee.password = cleanPass;
+      DataStore.saveEmployee(matchedEmployee);
     }
 
     // Build authenticated profile
