@@ -68,6 +68,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
+  useEffect(() => {
+    const syncProfile = () => {
+      if (user?.email) {
+        const emp = DataStore.getEmployees().find(e => e.email.toLowerCase() === user.email.toLowerCase() || e.id === user.id);
+        if (emp) {
+          const updatedUser: UserProfile = {
+            ...user,
+            name: emp.name,
+            role: emp.role,
+            phone: emp.phone,
+            photoUrl: emp.photo || user.photoUrl,
+            active: emp.active,
+          };
+          setUser(updatedUser);
+          try {
+            localStorage.setItem("xmore_auth_user", JSON.stringify(updatedUser));
+          } catch (e) {}
+        }
+      }
+    };
+
+    window.addEventListener("xmore_data_updated", syncProfile);
+    return () => window.removeEventListener("xmore_data_updated", syncProfile);
+  }, [user]);
+
   const login = async (
     email: string,
     password: string,
