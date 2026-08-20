@@ -48,6 +48,8 @@ import {
   initialShootAddons
 } from "./seedData";
 
+import { CloudSync } from "./cloudSync";
+
 const STORAGE_KEYS = {
   SETTINGS: "xmore_settings_final",
   CONTENT: "xmore_website_content_final",
@@ -91,9 +93,18 @@ function setItem<T>(key: string, value: T): void {
   try {
     localStorage.setItem(key, JSON.stringify(value));
     window.dispatchEvent(new Event("xmore_data_updated"));
+    // Non-blocking background push to central cloud server
+    CloudSync.pushKey(key, value).catch(() => {});
   } catch (err) {
     console.error(`Error saving to localStorage ${key}:`, err);
   }
+}
+
+// Auto-sync from central cloud when opening on any browser or mobile device
+if (typeof window !== "undefined") {
+  setTimeout(() => {
+    CloudSync.pullFromCloud(false).catch(() => {});
+  }, 150);
 }
 
 export const DataStore = {

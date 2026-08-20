@@ -13,6 +13,7 @@ import {
   ShootType
 } from "@/lib/types";
 import { formatCurrency } from "@/lib/utils";
+import { CloudSync } from "@/lib/data/cloudSync";
 import { 
   Globe, 
   Sparkles, 
@@ -37,7 +38,8 @@ import {
   Printer,
   Palette,
   TrendingUp,
-  Shield
+  Shield,
+  Cloud
 } from "lucide-react";
 
 export default function CmsPage() {
@@ -468,6 +470,17 @@ export default function CmsPage() {
     }
   };
 
+  const [broadcasting, setBroadcasting] = useState(false);
+  const [broadcastDone, setBroadcastDone] = useState(false);
+
+  const handleQuickBroadcast = async () => {
+    setBroadcasting(true);
+    await CloudSync.pushAllToCloud();
+    setBroadcasting(false);
+    setBroadcastDone(true);
+    setTimeout(() => setBroadcastDone(false), 3000);
+  };
+
   return (
     <div className="space-y-6 animate-fade-in text-white selection:bg-brand-red selection:text-white">
       
@@ -481,6 +494,15 @@ export default function CmsPage() {
             Update services, packages, wedding pricing, homepage copy, portfolio & blog in real-time
           </p>
         </div>
+
+        <button
+          onClick={handleQuickBroadcast}
+          disabled={broadcasting}
+          className="px-4 py-2 rounded-xl bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-white border border-emerald-500/30 text-xs font-heading font-bold uppercase tracking-wider flex items-center gap-2 transition-all self-start sm:self-auto shadow-lg shadow-emerald-500/10"
+        >
+          <Cloud className={`w-3.5 h-3.5 ${broadcasting ? "animate-spin" : ""}`} />
+          <span>{broadcastDone ? "✅ Synced to All Devices!" : broadcasting ? "Broadcasting..." : "Sync All to Cloud"}</span>
+        </button>
       </div>
 
       {/* Tabs */}
